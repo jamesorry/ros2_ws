@@ -12,10 +12,12 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+#if you add your own msg or srv file, make sure you add this line
 find_package(rosidl_default_generators REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/HardwareStatus.msg"
+  "srv/ComputeRectangleArea.srv"
 )
 
 
