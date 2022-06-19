@@ -15,6 +15,9 @@ find_package(ament_cmake REQUIRED)
 #if you add your own msg or srv file, make sure you add this line
 find_package(rosidl_default_generators REQUIRED)
 
+find_package(sensor_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/HardwareStatus.msg"
   "msg/LedStates.msg"
@@ -23,6 +26,9 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/ComputeRectangleArea.srv"
   "srv/SetLed.srv"
   "srv/CatchTurtle.srv"
+  "srv/TurnCamera.srv"
+  "action/Navigate2D.action"
+  DEPENDENCIES sensor_msgs geometry_msgs
 )
 
 
