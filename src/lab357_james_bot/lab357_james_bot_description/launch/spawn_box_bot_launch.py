@@ -11,7 +11,7 @@ def generate_launch_description():
         launch_ros.actions.Node(
             package='lab357_james_bot_description',
             # executable='spawn_box_bot_v2.py',
-            executable='nav2_gazebo_spawner.py',
+            executable='gazebo_multibot_spawner.py',
             output='screen',
             arguments=[
                 #'--robot_urdf', LaunchConfiguration('robot_urdf'),

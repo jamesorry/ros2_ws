@@ -42,8 +42,7 @@ install(
 
 install(
   PROGRAMS
-  launch/nav2_gazebo_spawner.py
-  launch/spawn_box_bot_v2.py
+  launch/gazebo_multibot_spawner.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
