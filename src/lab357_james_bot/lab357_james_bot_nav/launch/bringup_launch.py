@@ -31,10 +31,10 @@ def generate_launch_description():
     my_nav_dir = get_package_share_directory('lab357_james_bot_nav')
     my_launch_dir = os.path.join(my_nav_dir, 'launch')
     my_param_dir = os.path.join(my_nav_dir, 'param')
-    my_param_file = 'neuronbot_params.yaml'
+    my_param_file = 'nav2_params.yaml'
     my_bt_file = 'navigate_w_replanning_time.xml'
     my_map_dir = os.path.join(my_nav_dir, 'map')
-    my_map_file = 'mememan.yaml'
+    my_map_file = 'turtlebot3_world.yaml'
 
     # Create the launch configuration variables
     namespace = LaunchConfiguration('namespace')
@@ -45,7 +45,6 @@ def generate_launch_description():
     params_file = LaunchConfiguration('params_file')
     default_bt_xml_filename = LaunchConfiguration('default_bt_xml_filename')
     autostart = LaunchConfiguration('autostart')
-    open_rviz = LaunchConfiguration('open_rviz')
 
     stdout_linebuf_envvar = SetEnvironmentVariable(
         'RCUTILS_LOGGING_BUFFERED_STREAM', '1')
@@ -72,7 +71,7 @@ def generate_launch_description():
 
     declare_slam_cmd = DeclareLaunchArgument(
         'use_slam',
-        default_value='false',
+        default_value='true',
         description='Whether run a SLAM')
 
     declare_params_file_cmd = DeclareLaunchArgument(
@@ -129,13 +128,6 @@ def generate_launch_description():
                               'default_bt_xml_filename': default_bt_xml_filename,
                               'use_lifecycle_mgr': 'false',
                               'map_subscribe_transient_local': 'true'}.items()),
-                              
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(os.path.join(my_launch_dir, 'rviz_view_launch.py')),
-            launch_arguments={'use_sim_time': use_sim_time,
-                              'open_rviz': open_rviz,
-                              'map_subscribe_transient_local': 'true'}.items()),
-                             
     ])
 
     # Create the launch description and populate

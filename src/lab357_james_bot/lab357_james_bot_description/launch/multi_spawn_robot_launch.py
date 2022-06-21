@@ -15,7 +15,7 @@ def gen_robot_list(number_of_robots):
     robots = []
 
     for i in range(number_of_robots):
-        robot_name = "box_bot_"+str(i)
+        robot_name = "robot"+str(i+1)
         x_pos = float(i)
         robots.append({'name': robot_name, 'x_pose': x_pos,
                       'y_pose': 0.0, 'z_pose': 0.01})

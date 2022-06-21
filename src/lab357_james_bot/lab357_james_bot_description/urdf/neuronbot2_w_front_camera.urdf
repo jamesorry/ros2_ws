@@ -39,7 +39,7 @@
         rpy="0 3.1415 3.1415" />
       <geometry>
         <mesh
-          filename="package://lab357_james_bot_description/meshes/lab357_james_bot/base_link.stl" scale="0.001 0.001 0.001"/>
+          filename="package://lab357_james_bot_description/meshes/neuronbot2/base_link.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="black"/>
     </visual>
@@ -76,7 +76,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://lab357_james_bot_description/meshes/lab357_james_bot/laser_link.stl" scale="0.001 0.001 0.001"/>
+          filename="package://lab357_james_bot_description/meshes/neuronbot2/laser_link.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="red"/>
     </visual>
@@ -86,7 +86,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://lab357_james_bot_description/meshes/lab357_james_bot/laser_link.stl" scale="0.001 0.001 0.001"/>
+          filename="package://lab357_james_bot_description/meshes/neuronbot2/laser_link.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="red"/>
     </collision>
@@ -99,7 +99,7 @@
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
         <mesh
-          filename="package://lab357_james_bot_description/meshes/lab357_james_bot/wheel_link.stl" scale="0.001 0.001 0.001"/>
+          filename="package://lab357_james_bot_description/meshes/neuronbot2/wheel_link.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="red"/>
     </visual>
@@ -107,7 +107,7 @@
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
         <mesh
-          filename="package://lab357_james_bot_description/meshes/lab357_james_bot/wheel_link.stl" scale="0.001 0.001 0.001"/>
+          filename="package://lab357_james_bot_description/meshes/neuronbot2/wheel_link.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="red"/>
     </collision>
@@ -118,7 +118,7 @@
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
         <mesh
-          filename="package://lab357_james_bot_description/meshes/lab357_james_bot/wheel_link.stl" scale="0.001 0.001 0.001"/>
+          filename="package://lab357_james_bot_description/meshes/neuronbot2/wheel_link.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="red"/>
     </visual>
@@ -126,7 +126,7 @@
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
         <mesh
-          filename="package://lab357_james_bot_description/meshes/lab357_james_bot/wheel_link.stl" scale="0.001 0.001 0.001"/>
+          filename="package://lab357_james_bot_description/meshes/neuronbot2/wheel_link.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="red"/>
     </collision>  
