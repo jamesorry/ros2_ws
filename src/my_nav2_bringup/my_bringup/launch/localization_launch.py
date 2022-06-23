@@ -25,11 +25,7 @@ from nav2_common.launch import RewrittenYaml
 
 def generate_launch_description():
     # Get the launch directory
-    my_nav_dir = get_package_share_directory('lab357_james_bot_nav')
-    my_param_dir = os.path.join(my_nav_dir, 'param')    
-    my_param_file = 'nav2_fix_params.yaml'
-    my_map_dir = os.path.join(my_nav_dir, 'map')
-    my_map_file = 'mememan.yaml'
+    bringup_dir = get_package_share_directory('my_bringup')
 
     namespace = LaunchConfiguration('namespace')
     map_yaml_file = LaunchConfiguration('map')
@@ -68,8 +64,8 @@ def generate_launch_description():
 
         DeclareLaunchArgument(
             'map',
-            default_value=os.path.join(my_map_dir, my_map_file),
-            description='[localize] Full path to map yaml file to load'),
+            default_value=os.path.join(bringup_dir, 'maps', 'turtlebot3_world.yaml'),
+            description='Full path to map yaml file to load'),
 
         DeclareLaunchArgument(
             'use_sim_time', default_value='False',
@@ -81,7 +77,7 @@ def generate_launch_description():
 
         DeclareLaunchArgument(
             'params_file',
-            default_value=os.path.join(my_param_dir, my_param_file),
+            default_value=os.path.join(bringup_dir, 'params', 'nav2_params.yaml'),
             description='Full path to the ROS2 parameters file to use'),
 
         Node(

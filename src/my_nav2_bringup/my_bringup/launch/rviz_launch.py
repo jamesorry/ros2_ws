@@ -28,8 +28,7 @@ from nav2_common.launch import ReplaceString
 
 def generate_launch_description():
     # Get the launch directory
-    my_nav_dir = get_package_share_directory('lab357_james_bot_nav')
-    my_rviz_dir = os.path.join(my_nav_dir, 'rviz')
+    bringup_dir = get_package_share_directory('my_bringup')
 
     # Create the launch configuration variables
     namespace = LaunchConfiguration('namespace')
@@ -45,12 +44,12 @@ def generate_launch_description():
 
     declare_use_namespace_cmd = DeclareLaunchArgument(
         'use_namespace',
-        default_value='False',
+        default_value='false',
         description='Whether to apply a namespace to the navigation stack')
 
     declare_rviz_config_file_cmd = DeclareLaunchArgument(
         'rviz_config',
-        default_value=os.path.join(my_rviz_dir, 'nav2_default_view.rviz'),
+        default_value=os.path.join(bringup_dir, 'rviz', 'nav2_default_view.rviz'),
         description='Full path to the RVIZ config file to use')
 
     # Launch rviz

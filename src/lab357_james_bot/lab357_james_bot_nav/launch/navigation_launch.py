@@ -27,7 +27,7 @@ def generate_launch_description():
     # Get the launch directory
     my_nav_dir = get_package_share_directory('lab357_james_bot_nav')
     my_param_dir = os.path.join(my_nav_dir, 'param')
-    my_param_file = 'neuronbot_params.yaml'
+    my_param_file = 'nav2_fix_params.yaml'
     my_bt_file ='navigate_w_replanning_time.xml'
 
     namespace = LaunchConfiguration('namespace')
@@ -74,11 +74,11 @@ def generate_launch_description():
             description='Top-level namespace'),
 
         DeclareLaunchArgument(
-            'use_sim_time', default_value='false',
+            'use_sim_time', default_value='False',
             description='Use simulation (Gazebo) clock if true'),
 
         DeclareLaunchArgument(
-            'autostart', default_value='true',
+            'autostart', default_value='True',
             description='Automatically startup the nav2 stack'),
 
         DeclareLaunchArgument(
@@ -92,7 +92,7 @@ def generate_launch_description():
             description='Full path to the behavior tree xml file to use'),
 
         DeclareLaunchArgument(
-            'map_subscribe_transient_local', default_value='true',
+            'map_subscribe_transient_local', default_value='True',
             description='Whether to set the map subscriber QoS to transient local'),
 
         Node(

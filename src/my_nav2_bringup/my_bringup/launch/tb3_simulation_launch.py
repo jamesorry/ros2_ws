@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""This is all-in-one launch script intended for use by nav2 developers."""
+
 import os
 
 from ament_index_python.packages import get_package_share_directory
@@ -25,15 +27,9 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    print('----------------------multi_bot_simulation_launch.py')
     # Get the launch directory
-    my_nav_dir = get_package_share_directory('lab357_james_bot_nav')
-    my_gazebo_dir = get_package_share_directory('lab357_james_bot_gazebo')
-    my_description_dir = get_package_share_directory('lab357_james_bot_description')
-    my_launch_dir = os.path.join(my_nav_dir, 'launch')
-    my_param_dir = os.path.join(my_nav_dir, 'param')
-    my_rviz_dir = os.path.join(my_nav_dir, 'rviz')
-    my_map_dir = os.path.join(my_nav_dir, 'map')
+    bringup_dir = get_package_share_directory('my_bringup')
+    launch_dir = os.path.join(bringup_dir, 'launch')
 
     # Create the launch configuration variables
     slam = LaunchConfiguration('slam')
@@ -70,7 +66,7 @@ def generate_launch_description():
 
     declare_use_namespace_cmd = DeclareLaunchArgument(
         'use_namespace',
-        default_value='False',
+        default_value='false',
         description='Whether to apply a namespace to the navigation stack')
 
     declare_slam_cmd = DeclareLaunchArgument(
@@ -80,24 +76,24 @@ def generate_launch_description():
 
     declare_map_yaml_cmd = DeclareLaunchArgument(
         'map',
-        default_value=os.path.join(
-            my_map_dir, 'turtlebot3_world.yaml'),
+        default_value=os.path.join(bringup_dir, 'maps', 'turtlebot3_world.yaml'),
         description='Full path to map file to load')
 
     declare_use_sim_time_cmd = DeclareLaunchArgument(
         'use_sim_time',
-        default_value='True',
+        default_value='true',
         description='Use simulation (Gazebo) clock if true')
 
     declare_params_file_cmd = DeclareLaunchArgument(
         'params_file',
-        default_value=os.path.join(my_param_dir, 'nav2_params.yaml'),
+        default_value=os.path.join(bringup_dir, 'params', 'nav2_params.yaml'),
         description='Full path to the ROS2 parameters file to use for all launched nodes')
 
     declare_bt_xml_cmd = DeclareLaunchArgument(
         'default_bt_xml_filename',
         default_value=os.path.join(
-            my_param_dir, 'navigate_w_replanning_and_recovery.xml'),
+            get_package_share_directory('nav2_bt_navigator'),
+            'behavior_trees', 'navigate_w_replanning_and_recovery.xml'),
         description='Full path to the behavior tree xml file to use')
 
     declare_autostart_cmd = DeclareLaunchArgument(
@@ -106,7 +102,7 @@ def generate_launch_description():
 
     declare_rviz_config_file_cmd = DeclareLaunchArgument(
         'rviz_config_file',
-        default_value=os.path.join(my_rviz_dir, 'nav2_default_view.rviz'),
+        default_value=os.path.join(bringup_dir, 'rviz', 'nav2_default_view.rviz'),
         description='Full path to the RVIZ config file to use')
 
     declare_use_simulator_cmd = DeclareLaunchArgument(
@@ -135,22 +131,21 @@ def generate_launch_description():
         #              https://github.com/ROBOTIS-GIT/turtlebot3_simulations/issues/91
         # default_value=os.path.join(get_package_share_directory('turtlebot3_gazebo'),
         #                            'worlds/turtlebot3_worlds/waffle.model'),
-        default_value=os.path.join(my_gazebo_dir, 'worlds', 'waffle.model'),
+        default_value=os.path.join(bringup_dir, 'worlds', 'waffle.model'),
         description='Full path to world model file to load')
 
     # Specify the actions
     start_gazebo_server_cmd = ExecuteProcess(
         condition=IfCondition(use_simulator),
         cmd=['gzserver', '-s', 'libgazebo_ros_init.so', world],
-        cwd=[my_launch_dir], output='screen')
+        cwd=[launch_dir], output='screen')
 
     start_gazebo_client_cmd = ExecuteProcess(
-        condition=IfCondition(PythonExpression(
-            [use_simulator, ' and not ', headless])),
+        condition=IfCondition(PythonExpression([use_simulator, ' and not ', headless])),
         cmd=['gzclient'],
-        cwd=[my_launch_dir], output='screen')
+        cwd=[launch_dir], output='screen')
 
-    urdf = os.path.join(my_description_dir, 'urdf', 'turtlebot3_waffle.urdf')
+    urdf = os.path.join(bringup_dir, 'urdf', 'turtlebot3_waffle.urdf')
 
     start_robot_state_publisher_cmd = Node(
         condition=IfCondition(use_robot_state_pub),
@@ -164,16 +159,14 @@ def generate_launch_description():
         arguments=[urdf])
 
     rviz_cmd = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(my_launch_dir, 'multi_bot_rviz_launch.py')),
+        PythonLaunchDescriptionSource(os.path.join(launch_dir, 'rviz_launch.py')),
         condition=IfCondition(use_rviz),
         launch_arguments={'namespace': '',
                           'use_namespace': 'False',
                           'rviz_config': rviz_config_file}.items())
 
     bringup_cmd = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(my_launch_dir, 'bringup_launch.py')),
+        PythonLaunchDescriptionSource(os.path.join(launch_dir, 'bringup_launch.py')),
         launch_arguments={'namespace': namespace,
                           'use_namespace': use_namespace,
                           'slam': slam,

@@ -20,29 +20,22 @@ from launch import LaunchDescription
 from launch.actions import (DeclareLaunchArgument, GroupAction,
                             IncludeLaunchDescription, SetEnvironmentVariable)
 from launch.conditions import IfCondition
-from launch.conditions import UnlessCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch_ros.actions import PushRosNamespace
 
 
 def generate_launch_description():
-    print('----------------------bringup_launch.py')
     # Get the launch directory
-    my_nav_dir = get_package_share_directory('lab357_james_bot_nav')
-    my_launch_dir = os.path.join(my_nav_dir, 'launch')
-    my_param_dir = os.path.join(my_nav_dir, 'param')
-    my_param_file = 'nav2_fix_params.yaml'
-    my_bt_file = 'navigate_w_replanning_time.xml'
-    my_map_dir = os.path.join(my_nav_dir, 'map')
-    my_map_file = 'turtlebot3_world.yaml'
+    bringup_dir = get_package_share_directory('my_bringup')
+    launch_dir = os.path.join(bringup_dir, 'launch')
 
     # Create the launch configuration variables
     namespace = LaunchConfiguration('namespace')
     use_namespace = LaunchConfiguration('use_namespace')
+    slam = LaunchConfiguration('slam')
     map_yaml_file = LaunchConfiguration('map')
     use_sim_time = LaunchConfiguration('use_sim_time')
-    use_slam = LaunchConfiguration('use_slam', default='false')
     params_file = LaunchConfiguration('params_file')
     default_bt_xml_filename = LaunchConfiguration('default_bt_xml_filename')
     autostart = LaunchConfiguration('autostart')
@@ -57,43 +50,38 @@ def generate_launch_description():
 
     declare_use_namespace_cmd = DeclareLaunchArgument(
         'use_namespace',
-        default_value='False',
+        default_value='false',
         description='Whether to apply a namespace to the navigation stack')
+
+    declare_slam_cmd = DeclareLaunchArgument(
+        'slam',
+        default_value='False',
+        description='Whether run a SLAM')
 
     declare_map_yaml_cmd = DeclareLaunchArgument(
         'map',
-        default_value=os.path.join(my_map_dir, my_map_file),
         description='Full path to map yaml file to load')
 
     declare_use_sim_time_cmd = DeclareLaunchArgument(
         'use_sim_time',
-        default_value='False',
+        default_value='false',
         description='Use simulation (Gazebo) clock if true')
-
-    declare_slam_cmd = DeclareLaunchArgument(
-        'use_slam',
-        default_value='True',
-        description='Whether run a SLAM')
 
     declare_params_file_cmd = DeclareLaunchArgument(
         'params_file',
-        default_value=os.path.join(my_param_dir, my_param_file),
+        default_value=os.path.join(bringup_dir, 'params', 'nav2_params.yaml'),
         description='Full path to the ROS2 parameters file to use for all launched nodes')
 
     declare_bt_xml_cmd = DeclareLaunchArgument(
         'default_bt_xml_filename',
-        default_value=os.path.join(my_param_dir, my_bt_file),
+        default_value=os.path.join(
+            get_package_share_directory('nav2_bt_navigator'),
+            'behavior_trees', 'navigate_w_replanning_and_recovery.xml'),
         description='Full path to the behavior tree xml file to use')
 
     declare_autostart_cmd = DeclareLaunchArgument(
-        'autostart', 
-        default_value='True',
+        'autostart', default_value='true',
         description='Automatically startup the nav2 stack')
-
-    declare_open_rviz_cmd = DeclareLaunchArgument(
-        'open_rviz',
-        default_value='True',
-        description='Launch Rviz?')
 
     # Specify the actions
     bringup_cmd_group = GroupAction([
@@ -102,33 +90,33 @@ def generate_launch_description():
             namespace=namespace),
 
         IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(os.path.join(my_launch_dir, 'slam_launch.py')),
-            condition=IfCondition(use_slam),
+            PythonLaunchDescriptionSource(os.path.join(launch_dir, 'slam_launch.py')),
+            condition=IfCondition(slam),
             launch_arguments={'namespace': namespace,
                               'use_sim_time': use_sim_time,
                               'autostart': autostart,
                               'params_file': params_file}.items()),
 
         IncludeLaunchDescription(
-            # Run Localization only when we don't use SLAM
-            PythonLaunchDescriptionSource(os.path.join(my_launch_dir, 'localization_launch.py')),
-            condition=UnlessCondition(use_slam),
+            PythonLaunchDescriptionSource(os.path.join(launch_dir,
+                                                       'localization_launch.py')),
+            condition=IfCondition(PythonExpression(['not ', slam])),
             launch_arguments={'namespace': namespace,
                               'map': map_yaml_file,
                               'use_sim_time': use_sim_time,
                               'autostart': autostart,
                               'params_file': params_file,
-                              'use_lifecycle_mgr': 'False'}.items()),
+                              'use_lifecycle_mgr': 'false'}.items()),
 
         IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(os.path.join(my_launch_dir, 'navigation_launch.py')),
+            PythonLaunchDescriptionSource(os.path.join(launch_dir, 'navigation_launch.py')),
             launch_arguments={'namespace': namespace,
                               'use_sim_time': use_sim_time,
                               'autostart': autostart,
                               'params_file': params_file,
                               'default_bt_xml_filename': default_bt_xml_filename,
-                              'use_lifecycle_mgr': 'False',
-                              'map_subscribe_transient_local': 'True'}.items()),
+                              'use_lifecycle_mgr': 'false',
+                              'map_subscribe_transient_local': 'true'}.items()),
     ])
 
     # Create the launch description and populate
@@ -140,13 +128,12 @@ def generate_launch_description():
     # Declare the launch options
     ld.add_action(declare_namespace_cmd)
     ld.add_action(declare_use_namespace_cmd)
+    ld.add_action(declare_slam_cmd)
     ld.add_action(declare_map_yaml_cmd)
     ld.add_action(declare_use_sim_time_cmd)
-    ld.add_action(declare_slam_cmd)
     ld.add_action(declare_params_file_cmd)
     ld.add_action(declare_autostart_cmd)
     ld.add_action(declare_bt_xml_cmd)
-    ld.add_action(declare_open_rviz_cmd)
 
     # Add the actions to launch all of the navigation nodes
     ld.add_action(bringup_cmd_group)

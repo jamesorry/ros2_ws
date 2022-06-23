@@ -35,7 +35,7 @@ def generate_launch_description():
     lifecycle_nodes = ['map_saver']
 
     # Getting directories and launch-files
-    bringup_dir = get_package_share_directory('nav2_bringup')
+    bringup_dir = get_package_share_directory('my_bringup')
     slam_toolbox_dir = get_package_share_directory('slam_toolbox')
     slam_launch_file = os.path.join(slam_toolbox_dir, 'launch', 'online_sync_launch.py')
 
@@ -62,11 +62,11 @@ def generate_launch_description():
 
     declare_use_sim_time_cmd = DeclareLaunchArgument(
         'use_sim_time',
-        default_value='False',
+        default_value='true',
         description='Use simulation (Gazebo) clock if true')
 
     declare_autostart_cmd = DeclareLaunchArgument(
-        'autostart', default_value='True',
+        'autostart', default_value='true',
         description='Automatically startup the nav2 stack')
 
     # Nodes launching commands
@@ -76,14 +76,14 @@ def generate_launch_description():
 
     start_map_saver_server_cmd = Node(
             package='nav2_map_server',
-            executable='map_saver_server',
+            node_executable='map_saver_server',
             output='screen',
             parameters=[configured_params])
 
     start_lifecycle_manager_cmd = Node(
             package='nav2_lifecycle_manager',
-            executable='lifecycle_manager',
-            name='lifecycle_manager_slam',
+            node_executable='lifecycle_manager',
+            node_name='lifecycle_manager_slam',
             output='screen',
             parameters=[{'use_sim_time': use_sim_time},
                         {'autostart': autostart},
