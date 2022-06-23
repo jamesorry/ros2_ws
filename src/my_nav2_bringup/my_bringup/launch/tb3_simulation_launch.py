@@ -14,12 +14,13 @@
 
 """This is all-in-one launch script intended for use by nav2 developers."""
 
+from email.headerregistry import Group
 import os
 
 from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription, GroupAction, LogInfo
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PythonExpression
@@ -48,6 +49,7 @@ def generate_launch_description():
     use_rviz = LaunchConfiguration('use_rviz')
     headless = LaunchConfiguration('headless')
     world = LaunchConfiguration('world')
+    log_settings = LaunchConfiguration('log_settings', default='True')
 
     # Map fully qualified names to relative ones so the node's namespace can be prepended.
     # In case of the transforms (tf), currently, there doesn't seem to be a better alternative
@@ -66,7 +68,7 @@ def generate_launch_description():
 
     declare_use_namespace_cmd = DeclareLaunchArgument(
         'use_namespace',
-        default_value='false',
+        default_value='False',
         description='Whether to apply a namespace to the navigation stack')
 
     declare_slam_cmd = DeclareLaunchArgument(
@@ -76,12 +78,13 @@ def generate_launch_description():
 
     declare_map_yaml_cmd = DeclareLaunchArgument(
         'map',
-        default_value=os.path.join(bringup_dir, 'maps', 'turtlebot3_world.yaml'),
+        default_value=os.path.join(
+            bringup_dir, 'maps', 'turtlebot3_world.yaml'),
         description='Full path to map file to load')
 
     declare_use_sim_time_cmd = DeclareLaunchArgument(
         'use_sim_time',
-        default_value='true',
+        default_value='True',
         description='Use simulation (Gazebo) clock if true')
 
     declare_params_file_cmd = DeclareLaunchArgument(
@@ -97,12 +100,13 @@ def generate_launch_description():
         description='Full path to the behavior tree xml file to use')
 
     declare_autostart_cmd = DeclareLaunchArgument(
-        'autostart', default_value='true',
+        'autostart', default_value='True',
         description='Automatically startup the nav2 stack')
 
     declare_rviz_config_file_cmd = DeclareLaunchArgument(
         'rviz_config_file',
-        default_value=os.path.join(bringup_dir, 'rviz', 'nav2_default_view.rviz'),
+        default_value=os.path.join(
+            bringup_dir, 'rviz', 'nav2_default_view.rviz'),
         description='Full path to the RVIZ config file to use')
 
     declare_use_simulator_cmd = DeclareLaunchArgument(
@@ -141,7 +145,8 @@ def generate_launch_description():
         cwd=[launch_dir], output='screen')
 
     start_gazebo_client_cmd = ExecuteProcess(
-        condition=IfCondition(PythonExpression([use_simulator, ' and not ', headless])),
+        condition=IfCondition(PythonExpression(
+            [use_simulator, ' and not ', headless])),
         cmd=['gzclient'],
         cwd=[launch_dir], output='screen')
 
@@ -158,15 +163,18 @@ def generate_launch_description():
         remappings=remappings,
         arguments=[urdf])
 
+#   when launch multi_tb3... ,'use_rviz' is False
     rviz_cmd = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(os.path.join(launch_dir, 'rviz_launch.py')),
+        PythonLaunchDescriptionSource(
+            os.path.join(launch_dir, 'rviz_launch.py')),
         condition=IfCondition(use_rviz),
         launch_arguments={'namespace': '',
                           'use_namespace': 'False',
                           'rviz_config': rviz_config_file}.items())
 
     bringup_cmd = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(os.path.join(launch_dir, 'bringup_launch.py')),
+        PythonLaunchDescriptionSource(
+            os.path.join(launch_dir, 'bringup_launch.py')),
         launch_arguments={'namespace': namespace,
                           'use_namespace': use_namespace,
                           'slam': slam,
@@ -176,6 +184,47 @@ def generate_launch_description():
                           'default_bt_xml_filename': default_bt_xml_filename,
                           'autostart': autostart}.items())
 
+    log_info_group = GroupAction([
+        LogInfo(
+            condition=IfCondition(log_settings),
+            msg=['Start of loginfo------tb3_simulation_launch.py']),
+        LogInfo(
+            condition=IfCondition(log_settings),
+            msg=['namespace ', namespace]),
+        LogInfo(
+            condition=IfCondition(log_settings),
+            msg=[namespace, ' use_simulator: ', use_simulator]),
+        LogInfo(
+            condition=IfCondition(log_settings),
+            msg=[namespace, ' world: ', world]),
+        LogInfo(
+            condition=IfCondition(log_settings),
+            msg=[namespace, ' use_rviz: ', use_rviz]),
+        LogInfo(
+            condition=IfCondition(log_settings),
+            msg=[namespace, ' rviz_config: ', rviz_config_file]),
+        LogInfo(
+            condition=IfCondition(log_settings),
+            msg=[namespace, ' slam: ', slam]),
+        LogInfo(
+            condition=IfCondition(log_settings),
+            msg=[namespace, ' map: ', map_yaml_file]),
+        LogInfo(
+            condition=IfCondition(log_settings),
+            msg=[namespace, ' use_sim_time: ', use_sim_time]),
+        LogInfo(
+            condition=IfCondition(log_settings),
+            msg=[namespace, ' params_file: ', params_file]),
+        LogInfo(
+            condition=IfCondition(log_settings),
+            msg=[namespace, ' default_bt_xml_filename: ', default_bt_xml_filename]),
+        LogInfo(
+            condition=IfCondition(log_settings),
+            msg=[namespace, ' autostart: ', autostart]),
+        LogInfo(
+            condition=IfCondition(log_settings),
+            msg=['End of loginfo------tb3_simulation_launch.py']),
+    ])
     # Create the launch description and populate
     ld = LaunchDescription()
 
@@ -204,5 +253,5 @@ def generate_launch_description():
     ld.add_action(start_robot_state_publisher_cmd)
     ld.add_action(rviz_cmd)
     ld.add_action(bringup_cmd)
-
+    ld.add_action(log_info_group)
     return ld

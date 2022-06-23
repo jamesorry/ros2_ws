@@ -82,7 +82,17 @@ def main():
         if 'turtlebot3_diff_drive' in plugin.attrib.values():
             # The only plugin we care for now is 'diff_drive' which is
             # broadcasting a transform between`odom` and `base_footprint`
-            break
+            pass
+        elif 'differential_drive_controller' in plugin.attrib.values():
+            diff_drive_plugin = plugin
+
+    # We change the namespace to the robots corresponding one
+    # tag_diff_drive_ros_params = diff_drive_plugin.find('ros')
+    # tag_diff_drive_ns = ET.SubElement(tag_diff_drive_ros_params, 'namespace')
+    # tag_diff_drive_ns.text = '/' + args.robot_namespace
+    
+    # ros_tf_remap = ET.SubElement(tag_diff_drive_ros_params, 'remapping')
+    # ros_tf_remap.text = '/tf:=/' + args.robot_namespace + '/tf'
 
     ros_params = plugin.find('ros')
     ros_tf_remap = ET.SubElement(ros_params, 'remapping')

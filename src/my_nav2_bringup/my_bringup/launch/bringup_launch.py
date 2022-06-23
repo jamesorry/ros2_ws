@@ -50,7 +50,7 @@ def generate_launch_description():
 
     declare_use_namespace_cmd = DeclareLaunchArgument(
         'use_namespace',
-        default_value='false',
+        default_value='False',
         description='Whether to apply a namespace to the navigation stack')
 
     declare_slam_cmd = DeclareLaunchArgument(
@@ -64,7 +64,7 @@ def generate_launch_description():
 
     declare_use_sim_time_cmd = DeclareLaunchArgument(
         'use_sim_time',
-        default_value='false',
+        default_value='False',
         description='Use simulation (Gazebo) clock if true')
 
     declare_params_file_cmd = DeclareLaunchArgument(
@@ -80,7 +80,7 @@ def generate_launch_description():
         description='Full path to the behavior tree xml file to use')
 
     declare_autostart_cmd = DeclareLaunchArgument(
-        'autostart', default_value='true',
+        'autostart', default_value='True',
         description='Automatically startup the nav2 stack')
 
     # Specify the actions
@@ -106,7 +106,7 @@ def generate_launch_description():
                               'use_sim_time': use_sim_time,
                               'autostart': autostart,
                               'params_file': params_file,
-                              'use_lifecycle_mgr': 'false'}.items()),
+                              'use_lifecycle_mgr': 'False'}.items()),
 
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(launch_dir, 'navigation_launch.py')),
@@ -115,7 +115,7 @@ def generate_launch_description():
                               'autostart': autostart,
                               'params_file': params_file,
                               'default_bt_xml_filename': default_bt_xml_filename,
-                              'use_lifecycle_mgr': 'false',
+                              'use_lifecycle_mgr': 'False',
                               'map_subscribe_transient_local': 'true'}.items()),
     ])
 

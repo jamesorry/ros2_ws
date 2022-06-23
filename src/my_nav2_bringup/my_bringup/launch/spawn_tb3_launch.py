@@ -23,7 +23,7 @@ def generate_launch_description():
     return LaunchDescription([
         # TODO(orduno) might not be necessary to have it's own package
         launch_ros.actions.Node(
-            package='nav2_gazebo_spawner',
+            package='my_nav2_gazebo_spawner',
             executable='nav2_gazebo_spawner',
             output='screen',
             arguments=[
