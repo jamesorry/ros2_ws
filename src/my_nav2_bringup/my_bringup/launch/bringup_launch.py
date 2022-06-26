@@ -18,7 +18,7 @@ from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
 from launch.actions import (DeclareLaunchArgument, GroupAction,
-                            IncludeLaunchDescription, SetEnvironmentVariable)
+                            IncludeLaunchDescription, SetEnvironmentVariable, LogInfo)
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PythonExpression
@@ -39,6 +39,8 @@ def generate_launch_description():
     params_file = LaunchConfiguration('params_file')
     default_bt_xml_filename = LaunchConfiguration('default_bt_xml_filename')
     autostart = LaunchConfiguration('autostart')
+
+    log_settings = LaunchConfiguration('log_settings', default='True')
 
     stdout_linebuf_envvar = SetEnvironmentVariable(
         'RCUTILS_LOGGING_BUFFERED_STREAM', '1')
@@ -90,7 +92,8 @@ def generate_launch_description():
             namespace=namespace),
 
         IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(os.path.join(launch_dir, 'slam_launch.py')),
+            PythonLaunchDescriptionSource(
+                os.path.join(launch_dir, 'slam_launch.py')),
             condition=IfCondition(slam),
             launch_arguments={'namespace': namespace,
                               'use_sim_time': use_sim_time,
@@ -109,16 +112,39 @@ def generate_launch_description():
                               'use_lifecycle_mgr': 'False'}.items()),
 
         IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(os.path.join(launch_dir, 'navigation_launch.py')),
+            PythonLaunchDescriptionSource(os.path.join(
+                launch_dir, 'navigation_launch.py')),
             launch_arguments={'namespace': namespace,
                               'use_sim_time': use_sim_time,
                               'autostart': autostart,
                               'params_file': params_file,
                               'default_bt_xml_filename': default_bt_xml_filename,
                               'use_lifecycle_mgr': 'False',
-                              'map_subscribe_transient_local': 'true'}.items()),
+                              'map_subscribe_transient_local': 'True'}.items()),
     ])
-
+    log_info_group = GroupAction([
+        LogInfo(
+            condition=IfCondition(log_settings),
+            msg=['Start of loginfo------bringup_launch.py']),
+        LogInfo(
+            condition=IfCondition(log_settings),
+            msg=['namespace ', namespace]),
+        LogInfo(
+            condition=IfCondition(log_settings),
+            msg=[namespace, ' use_sim_time: ', use_sim_time]),
+        LogInfo(
+            condition=IfCondition(log_settings),
+            msg=[namespace, ' autostart: ', autostart]),
+        LogInfo(
+            condition=IfCondition(log_settings),
+            msg=[namespace, ' params_file: ', params_file]),
+        LogInfo(
+            condition=IfCondition(log_settings),
+            msg=[namespace, ' default_bt_xml_filename: ', default_bt_xml_filename]),
+        LogInfo(
+            condition=IfCondition(log_settings),
+            msg=['End of loginfo------bringup_launch.py']),
+    ])
     # Create the launch description and populate
     ld = LaunchDescription()
 
@@ -137,5 +163,5 @@ def generate_launch_description():
 
     # Add the actions to launch all of the navigation nodes
     ld.add_action(bringup_cmd_group)
-
+    ld.add_action(log_info_group)
     return ld

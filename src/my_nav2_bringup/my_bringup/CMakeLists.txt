@@ -20,6 +20,7 @@ find_package(ament_cmake REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
+find_package(geometry_msgs REQUIRED)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -39,5 +40,11 @@ install(DIRECTORY worlds DESTINATION share/${PROJECT_NAME})
 install(DIRECTORY params DESTINATION share/${PROJECT_NAME})
 install(DIRECTORY urdf DESTINATION share/${PROJECT_NAME})
 install(DIRECTORY models DESTINATION share/${PROJECT_NAME})
+
+install(
+  PROGRAMS
+  launch/initialPose.py
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 ament_package()

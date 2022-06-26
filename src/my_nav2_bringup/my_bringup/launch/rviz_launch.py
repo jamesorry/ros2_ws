@@ -17,7 +17,7 @@ import os
 from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, EmitEvent, RegisterEventHandler
+from launch.actions import DeclareLaunchArgument, EmitEvent, RegisterEventHandler, GroupAction, LogInfo
 from launch.conditions import IfCondition, UnlessCondition
 from launch.event_handlers import OnProcessExit
 from launch.events import Shutdown
@@ -34,6 +34,7 @@ def generate_launch_description():
     namespace = LaunchConfiguration('namespace')
     use_namespace = LaunchConfiguration('use_namespace')
     rviz_config_file = LaunchConfiguration('rviz_config')
+    log_settings = LaunchConfiguration('log_settings', default='True')
 
     # Declare the launch arguments
     declare_namespace_cmd = DeclareLaunchArgument(
@@ -49,7 +50,8 @@ def generate_launch_description():
 
     declare_rviz_config_file_cmd = DeclareLaunchArgument(
         'rviz_config',
-        default_value=os.path.join(bringup_dir, 'rviz', 'nav2_default_view.rviz'),
+        default_value=os.path.join(
+            bringup_dir, 'rviz', 'nav2_default_view.rviz'),
         description='Full path to the RVIZ config file to use')
 
     # Launch rviz
@@ -62,8 +64,8 @@ def generate_launch_description():
         output='screen')
 
     namespaced_rviz_config_file = ReplaceString(
-            source_file=rviz_config_file,
-            replacements={'<robot_namespace>': ('/', namespace)})
+        source_file=rviz_config_file,
+        replacements={'<robot_namespace>': ('/', namespace)})
 
     start_namespaced_rviz_cmd = Node(
         condition=IfCondition(use_namespace),
@@ -91,6 +93,24 @@ def generate_launch_description():
             target_action=start_namespaced_rviz_cmd,
             on_exit=EmitEvent(event=Shutdown(reason='rviz exited'))))
 
+    log_info_group = GroupAction([
+        LogInfo(
+            condition=IfCondition(log_settings),
+            msg=['Start of loginfo------rviz_launch.py']),
+        LogInfo(
+            condition=IfCondition(log_settings),
+            msg=['namespace ', namespace]),
+        LogInfo(
+            condition=IfCondition(log_settings),
+            msg=[namespace, ' rviz_config_file: ', rviz_config_file]),
+        LogInfo(
+            condition=IfCondition(log_settings),
+            msg=[namespace, ' namespaced_rviz_config_file: ', namespaced_rviz_config_file]),
+        LogInfo(
+            condition=IfCondition(log_settings),
+            msg=['End of loginfo------rviz_launch.py']),
+    ])
+
     # Create the launch description and populate
     ld = LaunchDescription()
 
@@ -106,5 +126,5 @@ def generate_launch_description():
     # Add other nodes and processes we need
     ld.add_action(exit_event_handler)
     ld.add_action(exit_event_handler_namespaced)
-
+    ld.add_action(log_info_group)
     return ld
