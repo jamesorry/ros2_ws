@@ -11,7 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import os
+from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 
 import launch.actions
@@ -19,18 +20,23 @@ import launch_ros.actions
 
 
 def generate_launch_description():
-
+    print('------------------my_nav2_gazebo_spawner---------------------------')
     return LaunchDescription([
         # TODO(orduno) might not be necessary to have it's own package
         launch_ros.actions.Node(
-            package='my_nav2_gazebo_spawner',
-            executable='nav2_gazebo_spawner',
+            package='my_gazebo_spawner',
+            executable='my_gazebo_spawner',
             output='screen',
             arguments=[
-                '--robot_name', launch.substitutions.LaunchConfiguration('robot_name'),
-                '--robot_namespace', launch.substitutions.LaunchConfiguration('robot_name'),
-                '--turtlebot_type', launch.substitutions.LaunchConfiguration('turtlebot_type'),
+                '--robot_name', launch.substitutions.LaunchConfiguration(
+                    'robot_name'),
+                '--robot_namespace', launch.substitutions.LaunchConfiguration(
+                    'robot_name'),
+                '--turtlebot_type', launch.substitutions.LaunchConfiguration(
+                    'turtlebot_type'),
                 '-x', launch.substitutions.LaunchConfiguration('x_pose'),
                 '-y', launch.substitutions.LaunchConfiguration('y_pose'),
-                '-z', launch.substitutions.LaunchConfiguration('z_pose')]),
+                '-z', launch.substitutions.LaunchConfiguration('z_pose'),
+            ]
+        ),
     ])

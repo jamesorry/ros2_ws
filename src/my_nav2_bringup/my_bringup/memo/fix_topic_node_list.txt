@@ -1,0 +1,3 @@
+如果執行 'ros2 topic list' 或是 'ros2 node list'
+結果沒有跑東西出來，或是出現的比預期的少，
+可以執行'ros2 daemon stop'，再執行'ros2 daemon start' 嘗試修復此問題

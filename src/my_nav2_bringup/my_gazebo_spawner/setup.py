@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = 'my_nav2_gazebo_spawner'
+package_name = 'my_gazebo_spawner'
 
 setup(
     name=package_name,
@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'nav2_gazebo_spawner = nav2_gazebo_spawner.nav2_gazebo_spawner:main',
+            'my_gazebo_spawner = my_gazebo_spawner.gazebo_spawner:main',
+            'my_gazebo_spawner_v0 = my_gazebo_spawner.gazebo_spawner_v0:main',
         ],
     },
 )

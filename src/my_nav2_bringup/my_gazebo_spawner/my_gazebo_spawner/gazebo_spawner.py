@@ -17,15 +17,19 @@
 import argparse
 import os
 import xml.etree.ElementTree as ET
+import rclpy
 
 from ament_index_python.packages import get_package_share_directory
 from gazebo_msgs.srv import SpawnEntity
-import rclpy
 
 
 def main():
+    bringup_dir = get_package_share_directory('my_bringup')
+    models_dir = os.path.join(bringup_dir, 'models/turtlebot3_waffle')
+    sdf_file = os.path.join(models_dir, 'model.sdf')
     # Get input arguments from user
-    parser = argparse.ArgumentParser(description='Spawn Robot into Gazebo with navigation2')
+    parser = argparse.ArgumentParser(
+        description='Spawn Robot into Gazebo with navigation2')
     parser.add_argument('-n', '--robot_name', type=str, default='robot',
                         help='Name of the robot to spawn')
     parser.add_argument('-ns', '--robot_namespace', type=str, default='robot',
@@ -36,14 +40,11 @@ def main():
                         help='the y component of the initial position [meters]')
     parser.add_argument('-z', type=float, default=0,
                         help='the z component of the initial position [meters]')
-    parser.add_argument('-k', '--timeout', type=float, default=10.0,
+    parser.add_argument('-k', '--timeout', type=float, default=30.0,
                         help="Seconds to wait. Block until the future is complete if negative. Don't wait if 0.")
-
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('-t', '--turtlebot_type', type=str,
-                       choices=['waffle', 'burger'])
-    group.add_argument('-s', '--sdf', type=str,
-                       help="the path to the robot's model file (sdf)")
+    parser.add_argument('-s', '--sdf', type=str, default=sdf_file,
+                        help='Name of the robot to spawn')
+    parser.add_argument('-t', '--turtlebot_type', type=str, default='waffle')
 
     args, unknown = parser.parse_known_args()
 
@@ -63,13 +64,8 @@ def main():
     node.get_logger().info('spawning `{}` on namespace `{}` at {}, {}, {}'.format(
         args.robot_name, args.robot_namespace, args.x, args.y, args.z))
 
-    # Get path to the robot's sdf file
-    if args.turtlebot_type is not None:
-        sdf_file_path = os.path.join(
-            get_package_share_directory('turtlebot3_gazebo'), 'models',
-            'turtlebot3_{}'.format(args.turtlebot_type), 'model.sdf')
-    else:
-        sdf_file_path = args.sdf
+    sdf_file_path = args.sdf
+    print('--------------sdf_file_path: ', str(sdf_file_path))
 
     # We need to remap the transform (/tf) topic so each robot has its own.
     # We do this by adding `ROS argument entries` to the sdf file for
@@ -82,17 +78,12 @@ def main():
         if 'turtlebot3_diff_drive' in plugin.attrib.values():
             # The only plugin we care for now is 'diff_drive' which is
             # broadcasting a transform between`odom` and `base_footprint`
-            pass
-        elif 'differential_drive_controller' in plugin.attrib.values():
-            diff_drive_plugin = plugin
+            break
 
     # We change the namespace to the robots corresponding one
     # tag_diff_drive_ros_params = diff_drive_plugin.find('ros')
     # tag_diff_drive_ns = ET.SubElement(tag_diff_drive_ros_params, 'namespace')
     # tag_diff_drive_ns.text = '/' + args.robot_namespace
-    
-    # ros_tf_remap = ET.SubElement(tag_diff_drive_ros_params, 'remapping')
-    # ros_tf_remap.text = '/tf:=/' + args.robot_namespace + '/tf'
 
     ros_params = plugin.find('ros')
     ros_tf_remap = ET.SubElement(ros_params, 'remapping')

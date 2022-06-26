@@ -31,6 +31,14 @@ from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, TextSubstitution
 
+def gen_robot_list(number_of_robots):
+    robots = []
+    for i in range(number_of_robots):
+        robot_name = "robot"+str(i+1)
+        x_pos = float(i)
+        robots.append({'name': robot_name,
+                       'x_pose': x_pos, 'y_pose': 0.0, 'z_pose': 0.01})
+    return robots
 
 def generate_launch_description():
     # Get the launch directory
@@ -40,7 +48,8 @@ def generate_launch_description():
     # Names and poses of the robots
     robots = [
         {'name': 'robot1', 'x_pose': 0.0, 'y_pose': 0.5, 'z_pose': 0.01},
-        {'name': 'robot2', 'x_pose': 0.0, 'y_pose': -0.5, 'z_pose': 0.01}
+        {'name': 'robot2', 'x_pose': 0.0, 'y_pose': -0.5, 'z_pose': 0.01},
+        # {'name': 'robot3', 'x_pose': 0.5, 'y_pose': -0.5, 'z_pose': 0.01}
     ]
 
     # Simulation settings

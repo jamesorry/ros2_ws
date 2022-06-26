@@ -137,7 +137,8 @@ def generate_launch_description():
         #                            'worlds/turtlebot3_worlds/waffle.model'),
         default_value=os.path.join(bringup_dir, 'worlds', 'waffle.model'),
         description='Full path to world model file to load')
-
+    
+    # if launch 'multi_tb3_simulation_launch.py' world is world_only.model
     # Specify the actions
     start_gazebo_server_cmd = ExecuteProcess(
         condition=IfCondition(use_simulator),
@@ -191,6 +192,9 @@ def generate_launch_description():
         LogInfo(
             condition=IfCondition(log_settings),
             msg=['namespace ', namespace]),
+        LogInfo(
+            condition=IfCondition(log_settings),
+            msg=[namespace, ' use_robot_state_pub: ', use_robot_state_pub, ', urdf:', urdf]),
         LogInfo(
             condition=IfCondition(log_settings),
             msg=[namespace, ' use_simulator: ', use_simulator]),
