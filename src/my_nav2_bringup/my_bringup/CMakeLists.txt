@@ -21,6 +21,7 @@ find_package(ament_cmake REQUIRED)
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -43,7 +44,8 @@ install(DIRECTORY models DESTINATION share/${PROJECT_NAME})
 
 install(
   PROGRAMS
-  launch/initialPose.py
+  src/initialPose.py
+  src/getRobotPose.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

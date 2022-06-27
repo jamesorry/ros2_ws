@@ -5,7 +5,6 @@ from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
     print('------------------initialPose_launch---------------------------')
-    bringup_dir = get_package_share_directory('my_bringup')
     initial_pose_1_cmd = Node(
         package='my_bringup',
         executable='initialPose.py',
