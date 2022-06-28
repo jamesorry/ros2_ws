@@ -20,10 +20,14 @@ class NumberPublisherNode(Node):
             PoseWithCovarianceStamped, "/robot1/initialpose", 10)
         self.pose_2_publisher_ = self.create_publisher(
             PoseWithCovarianceStamped, "/robot2/initialpose", 10)
-        self.Publusher_1()
-        self.Publusher_2()
+        self.timer_period = 0.5  # seconds
+        self.timer = self.create_timer(self.timer_period, self.timer_callback)
         self.get_logger().info("initial_pose has been started.")
 
+    def timer_callback(self):
+        self.Publusher_1()
+        self.Publusher_2()
+    
     def Publusher_1(self):
         pose_msg = PoseWithCovarianceStamped()
         pose_msg.header.stamp = self.get_clock().now().to_msg()
@@ -36,6 +40,7 @@ class NumberPublisherNode(Node):
         pose_msg.pose.pose.orientation.z = 0.0
         pose_msg.pose.pose.orientation.w = 1.0
         self.pose_1_publisher_.publish(pose_msg)
+        self.get_logger().info("robot1 public initial_pose.")
     
     def Publusher_2(self):
         pose_msg = PoseWithCovarianceStamped()
@@ -49,11 +54,18 @@ class NumberPublisherNode(Node):
         pose_msg.pose.pose.orientation.z = 0.0
         pose_msg.pose.pose.orientation.w = 1.0
         self.pose_2_publisher_.publish(pose_msg)
+        self.get_logger().info("robot2 public initial_pose.")
 
 
 def main(args=None):
     rclpy.init(args=args)
     node = NumberPublisherNode()
+    number_of_cycles = 5
+    spin_count = 0
+    while rclpy.ok() and spin_count < number_of_cycles:
+        rclpy.spin_once(node, timeout_sec=1.0)
+        spin_count += 1
+        print('spin_count: ' + str(spin_count))
     rclpy.shutdown()
     print("publish end")
 
