@@ -46,6 +46,7 @@ install(
   PROGRAMS
   src/initialPose.py
   src/getRobotPose.py
+  src/movement_detector.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
