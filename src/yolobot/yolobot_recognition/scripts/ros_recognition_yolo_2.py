@@ -26,10 +26,10 @@ from utils.torch_utils import select_device, load_classifier, time_synchronized
 
 bridge = CvBridge()
 
-class Camera_subscriber(Node):
+class Camera_subscriber_2(Node):
 
     def __init__(self):
-        super().__init__('camera_subscriber')
+        super().__init__('camera_subscriber_2')
 
         weights='yolov5s.pt'  # model.pt path(s)
         self.imgsz=640  # inference size (pixels)
@@ -79,13 +79,13 @@ class Camera_subscriber(Node):
         if self.device.type != 'cpu':
             self.model(torch.zeros(1, 3, imgsz, imgsz).to(self.device).type_as(next(self.model.parameters())))  # run once
 
-        self.subscription = self.create_subscription(
+        self.subscription_2 = self.create_subscription(
             Image,
-            '/robot1/intel_realsense_r200_depth/image_raw',
+            '/robot2/intel_realsense_r200_depth/image_raw',
             # 'rgb_cam/image_raw',
             self.camera_callback,
             10)
-        self.subscription  # prevent unused variable warning
+        self.subscription_2  # prevent unused variable warning
 
     def camera_callback(self, data):
         t0 = time.time()
@@ -152,7 +152,7 @@ class Camera_subscriber(Node):
 
 if __name__ == '__main__':
     rclpy.init(args=None)
-    camera_subscriber = Camera_subscriber()
-    rclpy.spin(camera_subscriber)
+    camera_subscriber_2 = Camera_subscriber_2()
+    rclpy.spin(camera_subscriber_2)
     rclpy.shutdown()
 
