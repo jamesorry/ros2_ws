@@ -26,19 +26,23 @@ from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
 from launch.actions import (DeclareLaunchArgument, ExecuteProcess, GroupAction,
-                            IncludeLaunchDescription, LogInfo)
+                            IncludeLaunchDescription, LogInfo, TimerAction)
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, TextSubstitution
+from launch_ros.actions import Node
 
 
 def gen_robot_list(number_of_robots):
     robots = []
     if number_of_robots is 1:
-        robots.append({'name': "robot1", 'x_pose': 0.0, 'y_pose': 0.5, 'z_pose': 0.01})
+        robots.append({'name': "robot1", 'x_pose': 0.0,
+                      'y_pose': 0.5, 'z_pose': 0.01})
     elif number_of_robots is 2:
-        robots.append({'name': "robot1", 'x_pose': 0.0, 'y_pose': 0.5, 'z_pose': 0.01})
-        robots.append({'name': "robot2", 'x_pose': 0.0, 'y_pose': -0.5, 'z_pose': 0.01})
+        robots.append({'name': "robot1", 'x_pose': 0.0,
+                      'y_pose': 0.5, 'z_pose': 0.01})
+        robots.append({'name': "robot2", 'x_pose': 0.0,
+                      'y_pose': -0.5, 'z_pose': 0.01})
     return robots
 
 
@@ -205,6 +209,19 @@ def generate_launch_description():
         )
         nav_instances_cmds.append(group)
 
+    initialPose_cmd = Node(
+        package='my_bringup',
+        executable='initialPose.py',
+        name='creat_initialPose',
+        output='screen'
+    )
+    """ 
+    TimerAction() 函数可以在指定的时间后执行一个action, 需要接受参数有
+        period:接受一个float, 延迟的时间
+        actions:接受一个list, [action_1, action_2,…], 列表中装要执行的action 
+    """
+    timer_action_cmd = TimerAction(period=10.0, actions=[initialPose_cmd, ])
+
     # Create the launch description and populate
     ld = LaunchDescription()
 
@@ -228,5 +245,6 @@ def generate_launch_description():
 
     for simulation_instance_cmd in nav_instances_cmds:
         ld.add_action(simulation_instance_cmd)
-
+    
+    ld.add_action(timer_action_cmd)
     return ld
