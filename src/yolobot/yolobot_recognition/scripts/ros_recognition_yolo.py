@@ -116,6 +116,7 @@ class Camera_subscriber(Node):
             one_box.ymax = int(bboxes[3][i])
             one_box.probability = float(score)
             one_box.class_id = cls[i]
+            one_box.center_dist = 2.5
             bboxes_msg.bounding_boxes.append(one_box)
             i = i+1
         self.publish_bbox.publish(bboxes_msg)

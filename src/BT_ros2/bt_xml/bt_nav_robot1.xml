@@ -1,6 +1,6 @@
 <root main_tree_to_execute = "MainTree">
     <BehaviorTree ID="MainTree">
-        <Repeat num_cycles="-1">
+        <Repeat num_cycles="1">
             <Sequence>
                 <!-- The goal value="position-x;position-y;orientaion-z;orientation-w" -->
                 <SetBlackboard output_key="robot1_Goal_a" value="1.69034;0.96446;0.82519;0.56484" />
@@ -12,12 +12,12 @@
                 <SetBlackboard output_key="robot2_Goal_c" value="-1.74977;-0.89496;0.27297;0.96202" />
 
                 <Sequence>
-                    <SubTree ID="robot1_MoveRobot" target="robot1_Goal_a" />
-                    <SubTree ID="robot2_MoveRobot" target="robot2_Goal_a" />
+                    <!-- <SubTree ID="robot1_MoveRobot" target="robot1_Goal_a" />
+                    <SubTree ID="robot2_MoveRobot" target="robot2_Goal_a" /> -->
                     <SubTree ID="robot1_MoveRobot" target="robot1_Goal_b" />
                     <SubTree ID="robot2_MoveRobot" target="robot2_Goal_b" />
-                    <SubTree ID="robot1_MoveRobot" target="robot1_Goal_c" />
-                    <SubTree ID="robot2_MoveRobot" target="robot2_Goal_c" />
+                    <!-- <SubTree ID="robot1_MoveRobot" target="robot1_Goal_c" />
+                    <SubTree ID="robot2_MoveRobot" target="robot2_Goal_c" /> -->
                 </Sequence>
             </Sequence>
         </Repeat>

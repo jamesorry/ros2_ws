@@ -30,10 +30,16 @@ def generate_launch_description():
     bringup_dir = get_package_share_directory('my_bringup')
     launch_dir = os.path.join(bringup_dir, 'launch')
 
+    # Get the launch directory of gmapping
+    slam_gmapping_dir = get_package_share_directory("slam_gmapping")
+    slam_gmapping_launch_dir = os.path.join(slam_gmapping_dir, "launch")
+
     # Create the launch configuration variables
     namespace = LaunchConfiguration('namespace')
     use_namespace = LaunchConfiguration('use_namespace')
     slam = LaunchConfiguration('slam')
+    slam_toolbox = LaunchConfiguration("slam_toolbox")
+    slam_gmapping = LaunchConfiguration("slam_gmapping")
     map_yaml_file = LaunchConfiguration('map')
     use_sim_time = LaunchConfiguration('use_sim_time')
     params_file = LaunchConfiguration('params_file')
@@ -59,6 +65,15 @@ def generate_launch_description():
         'slam',
         default_value='False',
         description='Whether run a SLAM')
+
+    declare_slam_toolbox_cmd = DeclareLaunchArgument(
+        "slam_toolbox", default_value="False", description="Whether run a SLAM toolbox"
+    )
+    declare_slam_gmapping_cmd = DeclareLaunchArgument(
+        "slam_gmapping",
+        default_value="False",
+        description="Whether run a SLAM gmapping",
+    )
 
     declare_map_yaml_cmd = DeclareLaunchArgument(
         'map',
@@ -94,11 +109,25 @@ def generate_launch_description():
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
                 os.path.join(launch_dir, 'slam_launch.py')),
-            condition=IfCondition(slam),
+            condition=IfCondition(PythonExpression(['not ', slam])),
             launch_arguments={'namespace': namespace,
                               'use_sim_time': use_sim_time,
                               'autostart': autostart,
                               'params_file': params_file}.items()),
+
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                os.path.join(launch_dir, "slam_toolbox.py")
+            ),
+            condition=IfCondition(
+                PythonExpression(
+                    [slam, " and ", slam_toolbox, " and not ", slam_gmapping]
+                )
+            ),
+            launch_arguments={
+                "use_sim_time": use_sim_time,
+            }.items(),
+        ),
 
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(launch_dir,
@@ -122,6 +151,23 @@ def generate_launch_description():
                               'use_lifecycle_mgr': 'False',
                               'map_subscribe_transient_local': 'True'}.items()),
     ])
+
+    # Not in GroupAction because namespace were prepended twice because
+    # slam_gmapping.launch.py already accepts a namespace argument
+    slam_gmapping_cmd = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(slam_gmapping_launch_dir, "slam_gmapping.launch.py")
+        ),
+        condition=IfCondition(
+            PythonExpression([slam, " and ", slam_gmapping,
+                             " and not ", slam_toolbox])
+        ),
+        launch_arguments={
+            "namespace": namespace,
+            "use_sim_time": use_sim_time,
+        }.items(),
+    )
+
     log_info_group = GroupAction([
         LogInfo(
             condition=IfCondition(log_settings),
@@ -155,6 +201,8 @@ def generate_launch_description():
     ld.add_action(declare_namespace_cmd)
     ld.add_action(declare_use_namespace_cmd)
     ld.add_action(declare_slam_cmd)
+    ld.add_action(declare_slam_toolbox_cmd)
+    ld.add_action(declare_slam_gmapping_cmd)
     ld.add_action(declare_map_yaml_cmd)
     ld.add_action(declare_use_sim_time_cmd)
     ld.add_action(declare_params_file_cmd)
@@ -164,4 +212,5 @@ def generate_launch_description():
     # Add the actions to launch all of the navigation nodes
     ld.add_action(bringup_cmd_group)
     ld.add_action(log_info_group)
+    ld.add_action(slam_gmapping_cmd)
     return ld

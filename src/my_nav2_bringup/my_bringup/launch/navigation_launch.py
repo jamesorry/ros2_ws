@@ -144,9 +144,4 @@ def generate_launch_description():
             parameters=[{'use_sim_time': use_sim_time},
                         {'autostart': autostart},
                         {'node_names': lifecycle_nodes}]),
-        # IncludeLaunchDescription(
-        #     PythonLaunchDescriptionSource(
-        #         os.path.join(bringup_dir, 'initialPose_launch.py')),
-        #     launch_arguments={'namespace': '',
-        #                       'use_namespace': 'False'}.items())
     ])
