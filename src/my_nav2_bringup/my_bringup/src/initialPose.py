@@ -32,8 +32,8 @@ class NumberPublisherNode(Node):
         pose_msg = PoseWithCovarianceStamped()
         pose_msg.header.stamp = self.get_clock().now().to_msg()
         pose_msg.header.frame_id = "map"
-        pose_msg.pose.pose.position.x = 0.0
-        pose_msg.pose.pose.position.y = 1.5
+        pose_msg.pose.pose.position.x = 0.05    # 0.0     # 0.05
+        pose_msg.pose.pose.position.y = 0.5     # 1.5     # 0.5
         pose_msg.pose.covariance[0] = 0.25
         pose_msg.pose.covariance[6 * 1 + 1] = 0.25
         pose_msg.pose.covariance[6 * 5 + 5] = 0.06853891945200942
@@ -46,8 +46,8 @@ class NumberPublisherNode(Node):
         pose_msg = PoseWithCovarianceStamped()
         pose_msg.header.stamp = self.get_clock().now().to_msg()
         pose_msg.header.frame_id = "map"
-        pose_msg.pose.pose.position.x = -1.64
-        pose_msg.pose.pose.position.y = 1.47
+        pose_msg.pose.pose.position.x = 0.05       # -1.64   # 0.05
+        pose_msg.pose.pose.position.y = -0.5       # 1.47    # -0.5
         pose_msg.pose.covariance[0] = 0.25
         pose_msg.pose.covariance[6 * 1 + 1] = 0.25
         pose_msg.pose.covariance[6 * 5 + 5] = 0.06853891945200942

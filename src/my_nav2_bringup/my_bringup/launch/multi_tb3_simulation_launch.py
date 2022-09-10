@@ -38,11 +38,17 @@ def gen_robot_list(number_of_robots):
     if number_of_robots is 1:
         robots.append({'name': "robot1", 'x_pose': 0.0,
                       'y_pose': 0.5, 'z_pose': 0.01})
-    elif number_of_robots is 2:
-        robots.append({'name': "robot1", 'x_pose': 1.0,
-                      'y_pose': 1.5, 'z_pose': 0.01})
-        robots.append({'name': "robot2", 'x_pose': -1.0,
-                      'y_pose': 1.5, 'z_pose': 0.01})
+    # elif number_of_robots is 2: # this  is for position world_house.model
+    #     robots.append({'name': "robot1", 'x_pose': 1.0,
+    #                   'y_pose': 1.5, 'z_pose': 0.01})
+    #     robots.append({'name': "robot2", 'x_pose': -1.0,
+    #                   'y_pose': 1.5, 'z_pose': 0.01})
+    
+    elif number_of_robots is 2: # this  is for position world_only.model
+        robots.append({'name': "robot1", 'x_pose': 0.0,
+                      'y_pose': 0.5, 'z_pose': 0.01})
+        robots.append({'name': "robot2", 'x_pose': 0.0,
+                      'y_pose': -0.5, 'z_pose': 0.01})
     return robots
 
 
@@ -59,9 +65,9 @@ def generate_launch_description():
 
     # On this example all robots are launched with the same settings
     map_yaml_file = LaunchConfiguration('map')
-    slam = LaunchConfiguration('slam')
-    slam_toolbox = LaunchConfiguration("slam_toolbox")
-    slam_gmapping = LaunchConfiguration("slam_gmapping")
+    # slam = LaunchConfiguration('slam')
+    # slam_toolbox = LaunchConfiguration("slam_toolbox")
+    # slam_gmapping = LaunchConfiguration("slam_gmapping")
     default_bt_xml_filename = LaunchConfiguration('default_bt_xml_filename')
     autostart = LaunchConfiguration('autostart')
     rviz_config_file = LaunchConfiguration('rviz_config')
@@ -70,21 +76,33 @@ def generate_launch_description():
     log_settings = LaunchConfiguration('log_settings', default='True')
 
     # Declare the launch arguments
+    # declare_world_cmd = DeclareLaunchArgument(
+    #     'world',
+    #     default_value=os.path.join(
+    #         bringup_dir, 'worlds', 'world_house.model'),
+    #     description='Full path to world file to load')
+    
     declare_world_cmd = DeclareLaunchArgument(
         'world',
         default_value=os.path.join(
-            bringup_dir, 'worlds', 'world_house.model'),
+            bringup_dir, 'worlds', 'world_only.model'),
         description='Full path to world file to load')
-
+    
     declare_simulator_cmd = DeclareLaunchArgument(
         'simulator',
         default_value='gazebo',
         description='The simulator to use (gazebo or gzserver)')
 
+    # declare_map_yaml_cmd = DeclareLaunchArgument(
+    #     'map',
+    #     default_value=os.path.join(
+    #         bringup_dir, 'maps', 'waffle_house.yaml'),
+    #     description='Full path to map file to load')
+
     declare_map_yaml_cmd = DeclareLaunchArgument(
         'map',
         default_value=os.path.join(
-            bringup_dir, 'maps', 'waffle_house.yaml'),
+            bringup_dir, 'maps', 'turtlebot3_world.yaml'),
         description='Full path to map file to load')
 
     declare_robot1_params_file_cmd = DeclareLaunchArgument(
@@ -126,19 +144,18 @@ def generate_launch_description():
         default_value='True',
         description='Whether to start RVIZ')
 
-    declare_slam_cmd = DeclareLaunchArgument(
-        'slam',
-        default_value='False',
-        description='Whether run a SLAM')
-
-    declare_slam_toolbox_cmd = DeclareLaunchArgument(
-        "slam_toolbox", default_value="False", description="Whether run a SLAM toolbox"
-    )
-    declare_slam_gmapping_cmd = DeclareLaunchArgument(
-        "slam_gmapping",
-        default_value="False",
-        description="Whether run a SLAM gmapping",
-    )
+    # declare_slam_cmd = DeclareLaunchArgument(
+    #     'slam',
+    #     default_value='False',
+    #     description='Whether run a SLAM')
+    # declare_slam_toolbox_cmd = DeclareLaunchArgument(
+    #     "slam_toolbox", default_value="False", description="Whether run a SLAM toolbox"
+    # )
+    # declare_slam_gmapping_cmd = DeclareLaunchArgument(
+    #     "slam_gmapping",
+    #     default_value="False",
+    #     description="Whether run a SLAM gmapping",
+    # )
 
     # Start Gazebo with plugin providing the robot spawing service
     start_gazebo_cmd = ExecuteProcess(
@@ -194,9 +211,9 @@ def generate_launch_description():
                                       'use_rviz': 'False',
                                       'use_simulator': 'False',
                                       'headless': 'False',
-                                      "slam": slam,
-                                      "slam_toolbox": slam_toolbox,
-                                      "slam_gmapping": slam_gmapping,
+                                    #   "slam": slam,
+                                    #   "slam_toolbox": slam_toolbox,
+                                    #   "slam_gmapping": slam_gmapping,
                                       'use_robot_state_pub': use_robot_state_pub}.items()),
                 LogInfo(
                     condition=IfCondition(log_settings),
@@ -230,7 +247,7 @@ def generate_launch_description():
         nav_instances_cmds.append(group)
 
     initialPose_cmd = Node(
-        condition=IfCondition(PythonExpression(["not ", slam, " and not ", slam_gmapping])),
+        # condition=IfCondition(PythonExpression(["not ", slam, " and not ", slam_gmapping])),
         package='my_bringup',
         executable='initialPose.py',
         name='creat_initialPose',
@@ -262,9 +279,9 @@ def generate_launch_description():
     ld.add_action(declare_autostart_cmd)
     ld.add_action(declare_rviz_config_file_cmd)
     ld.add_action(declare_use_robot_state_pub_cmd)
-    ld.add_action(declare_slam_cmd)
-    ld.add_action(declare_slam_toolbox_cmd)
-    ld.add_action(declare_slam_gmapping_cmd)
+    # ld.add_action(declare_slam_cmd)
+    # ld.add_action(declare_slam_toolbox_cmd)
+    # ld.add_action(declare_slam_gmapping_cmd)
 
     # Add the actions to start gazebo, robots and simulations
     ld.add_action(start_gazebo_cmd)
