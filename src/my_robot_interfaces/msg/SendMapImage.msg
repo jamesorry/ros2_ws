@@ -1,0 +1,1 @@
+sensor_msgs/Image map_image

@@ -362,6 +362,7 @@
         </inertia>
         <mass>0.035</mass>
       </inertial>
+      
       <collision name="collision">
         <pose>0 0.047 -0.005 0 0 0</pose>
         <geometry>
@@ -370,7 +371,11 @@
           </box>
         </geometry>
       </collision>
-      <pose>0.069 -0.047 0.107 0 0 0</pose>
+      
+      <!-- 修改此pose可調整鏡頭高度 -->
+      <pose>0.069 -0.047 0.507 0 0 0</pose>
+      <!-- <pose>0.069 -0.047 0.107 0 0 0</pose> -->
+      
       <sensor name="intel_realsense_r200_depth" type="depth">
         <always_on>1</always_on>
         <update_rate>30</update_rate>

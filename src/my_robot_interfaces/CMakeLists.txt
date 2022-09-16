@@ -26,6 +26,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/BoundingBox.msg"
   "msg/BoundingBoxes.msg"
   "msg/ObjectCount.msg"
+  "msg/SendMapImage.msg"
   "srv/ComputeRectangleArea.srv"
   "srv/SetLed.srv"
   "srv/CatchTurtle.srv"

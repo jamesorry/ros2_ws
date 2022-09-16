@@ -536,23 +536,45 @@ Visualization Manager:
     Current:
       Class: rviz_default_plugins/TF
   Value: true
+  # ros可视化工具rviz使用教程 (https://blog.csdn.net/weixin_41245919/article/details/86536706)
   Views:
     Current:
-      Angle: -1.6150002479553223
-      Class: rviz_default_plugins/TopDownOrtho
+      Class: rviz_default_plugins/Orbit
+      Distance: 11.9773788
       Enable Stereo Rendering:
-        Stereo Eye Separation: 0.05999999865889549
+        Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
+      Focal Point:
+        X: 0
+        Y: 0
+        Z: 0
+      Focal Shape Fixed Size: true
+      Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
-      Near Clip Distance: 0.009999999776482582
-      Scale: 127.88431549072266
+      Near Clip Distance: 0.00999999978
+      Pitch: 0.785398006
       Target Frame: <Fixed Frame>
-      Value: TopDownOrtho (rviz_default_plugins)
-      X: -0.044467076659202576
-      Y: -0.38726311922073364
+      Value: Orbit (rviz_default_plugins)
+      Yaw: 0.785398006
+    # Current:
+    #   Angle: -1.6150002479553223
+    #   Class: rviz_default_plugins/TopDownOrtho
+    #   Enable Stereo Rendering:
+    #     Stereo Eye Separation: 0.05999999865889549
+    #     Stereo Focal Distance: 1
+    #     Swap Stereo Eyes: false
+    #     Value: false
+    #   Invert Z Axis: false
+    #   Name: Current View
+    #   Near Clip Distance: 0.009999999776482582
+    #   Scale: 127.88431549072266
+    #   Target Frame: <Fixed Frame>
+    #   Value: TopDownOrtho (rviz_default_plugins)
+    #   X: -0.044467076659202576
+    #   Y: -0.38726311922073364
     Saved: ~
 Window Geometry:
   Displays:

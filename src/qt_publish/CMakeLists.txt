@@ -23,21 +23,28 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_python REQUIRED)
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(rclcpp REQUIRED)
+find_package(rclpy REQUIRED)
 find_package(image_geometry REQUIRED)
 find_package(map_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
+find_package(my_robot_interfaces REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(my_bringup REQUIRED)
+# find_package(my_cpp_py_point_cloud2 REQUIRED)
 
 find_package(Boost REQUIRED COMPONENTS thread)
+
+
 
 set(DEPENDENCIES
   geometry_msgs
@@ -48,6 +55,9 @@ set(DEPENDENCIES
   tf2_geometry_msgs
   tf2
   tf2_ros
+  my_robot_interfaces
+  sensor_msgs
+  my_bringup
 )
 
 add_executable(qt_publish
@@ -58,6 +68,7 @@ add_executable(qt_publish
 )
 
 target_link_libraries(qt_publish Qt5::Widgets)
+install(DIRECTORY images DESTINATION share/${PROJECT_NAME})
 
 install(
   TARGETS
@@ -68,6 +79,9 @@ install(
 install(
   PROGRAMS
   scripts/python_ui_test_01.py
+  scripts/pyqt5_test_02.py
+  scripts/SendMapImage.py
+  scripts/test_point_cloud.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

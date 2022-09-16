@@ -23,6 +23,7 @@ import torch
 import torch.backends.cudnn as cudnn
 
 from my_robot_interfaces.msg import BoundingBoxes, BoundingBox
+import sensor_msgs_py.point_cloud2 as point_cloud2
 
 FILE = Path(__file__).absolute()
 sys.path.append(FILE.parents[0].as_posix())
@@ -96,11 +97,12 @@ class Camera_subscriber(Node):
 
         self.subscription = self.create_subscription(
             Image,
+            # '/robot1/intel_realsense_r200_depth/depth/image_raw',
             '/robot1/intel_realsense_r200_depth/image_raw',
             # 'rgb_cam/image_raw',
             self.camera_callback,
             10)
-        self.subscription  # prevent unused variable warning
+        # self.subscription  # prevent unused variable warning
 
     def yolovFive2bboxes_msgs(self, bboxes: list, scores: list, cls: list, img_header: Header):
         bboxes_msg = BoundingBoxes()
@@ -131,10 +133,10 @@ class Camera_subscriber(Node):
 
         t0 = time.time()
         img = bridge.imgmsg_to_cv2(data, "bgr8")
+        # img = bridge.imgmsg_to_cv2(data, "32FC1")
 
         # check for common shapes
-        s = np.stack([letterbox(x, self.imgsz, stride=self.stride)[
-                     0].shape for x in img], 0)  # shapes
+        s = np.stack([letterbox(x, self.imgsz, stride=self.stride)[0].shape for x in img], 0)  # shapes
         # rect inference if all shapes equal
         self.rect = np.unique(s, axis=0).shape[0] == 1
         if not self.rect:
@@ -190,23 +192,25 @@ class Camera_subscriber(Node):
                     s += f"{n} {self.names[int(c)]}{'s' * (n > 1)}, "
 
                 for *xyxy, conf, cls in reversed(det):
-                    c = int(cls)  # integer class
-                    label = None if self.hide_labels else (
-                        self.names[c] if self.hide_conf else f'{self.names[c]} {conf:.2f}')
-                    plot_one_box(xyxy, img0, label=label, color=colors(
-                        c, True), line_thickness=self.line_thickness)
+                    if float(conf) >= 0.75:
+                        c = int(cls)  # integer class
+                        label = None if self.hide_labels else (
+                            self.names[c] if self.hide_conf else f'{self.names[c]} {conf:.2f}')
+                        plot_one_box(xyxy, img0, label=label, color=colors(
+                            c, True), line_thickness=self.line_thickness)
 
-                    class_list.append(self.names[c])
-                    confidence_list.append(conf)
-                    # tensor to float
-                    x_min_list.append(xyxy[0].item())
-                    y_min_list.append(xyxy[1].item())
-                    x_max_list.append(xyxy[2].item())
-                    y_max_list.append(xyxy[3].item())
-                    # print("integer class: ", c, "; lable: ", label)
-                    # print("--------------------")
+                        class_list.append(self.names[c])
+                        confidence_list.append(conf)
+                        # tensor to float
+                        x_min_list.append(xyxy[0].item())
+                        y_min_list.append(xyxy[1].item())
+                        x_max_list.append(xyxy[2].item())
+                        y_max_list.append(xyxy[3].item())
+                        # print("integer class: ", c, "; lable: ", label)
+                        # print("--------------------")
 
         cv2.imshow("IMAGE", img0)
+
         if len(class_list):
             renamed_list = self.rename_duplicate(class_list)
             self.yolovFive2bboxes_msgs(bboxes=[x_min_list, y_min_list, x_max_list, y_max_list],
