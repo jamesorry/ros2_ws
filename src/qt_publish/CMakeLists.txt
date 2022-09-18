@@ -68,7 +68,12 @@ add_executable(qt_publish
 )
 
 target_link_libraries(qt_publish Qt5::Widgets)
-install(DIRECTORY images DESTINATION share/${PROJECT_NAME})
+
+install(DIRECTORY 
+  images
+  doc_file
+  DESTINATION share/${PROJECT_NAME}
+)
 
 install(
   TARGETS
