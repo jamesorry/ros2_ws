@@ -160,6 +160,7 @@ class Camera_subscriber(Node):
         if img.ndimension() == 3:
             img = img.unsqueeze(0)
 
+        save_dir = '/home/james/ros2_ws/src/yolobot/yolobot_recognition/scripts'
         # Inference
         t1 = time_synchronized()
         pred = self.model(img,

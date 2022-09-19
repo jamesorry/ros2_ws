@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+from pickletools import stackslice
 import sys
 import os
 import math
@@ -9,14 +10,14 @@ from rclpy.node import Node
 from my_robot_interfaces.msg import SendMapImage  # import custom message
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image, PointCloud2
-# import cv2
+import cv2
 import numpy as np
 import time
-# from ament_index_python.packages import get_package_share_directory, get_resources, get_resource, get_search_paths
+from ament_index_python.packages import get_package_share_directory, get_resources, get_resource, get_search_paths
 import sensor_msgs_py.point_cloud2 as point_cloud2
 import matplotlib.pyplot as plt
 # 可以讀取到z軸的數值,但xy兩個數值需要經過轉換
-
+import statistics
 
 class TestPointCloud(Node):
     def __init__(self):
@@ -62,10 +63,13 @@ class TestPointCloud(Node):
         print('X list min value:', min(self.x_list))
         print('Y list max value:', max(self.y_list))
         print('Y list min value:', min(self.y_list))
+        print('Z list mean value(m): ', statistics.mean(self.z_list)) # 最後取平均值 得到z軸的距離
         self._num_count = self._num_count + 1
         print("writing.....", self._num_count)
         plt.plot(self.x_list, self.y_list)
         plt.plot(self.x_list_fix, self.y_list_fix, color='red')
+        # plt.gca().invert_xaxis() # x軸逆序显示
+        plt.gca().invert_yaxis() # y軸逆序显示
         plt.show()
         self.x_list_fix.clear()
         self.y_list_fix.clear()
