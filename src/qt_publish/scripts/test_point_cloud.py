@@ -27,14 +27,13 @@ class TestPointCloud(Node):
         # save_text_dir = get_package_share_directory('qt_publish')
         # self.save_text_file = os.path.join(save_text_dir, 'doc_file', 'for_test_1.txt')
         self.save_text_file = "/home/james/ros2_ws/src/qt_publish/doc_file/for_test_1.txt"
-        print("write file name: ", self.save_text_file)
+        self.save_image_path = "/home/james/ros2_ws/src/qt_publish/images"
         self._num_count = 0
         self.x_list = []
         self.y_list = []
         self.x_list_fix = []
         self.y_list_fix = []
         self.z_list = []
-        self.bridge = CvBridge()
         # self.subscriber_ = self.create_subscription(
         #     PointCloud2, "/robot1/intel_realsense_r200_depth/points", self.callback_pointcloud_save_to_text, 10)
         self.subscriber_ = self.create_subscription(
@@ -63,14 +62,16 @@ class TestPointCloud(Node):
         print('X list min value:', min(self.x_list))
         print('Y list max value:', max(self.y_list))
         print('Y list min value:', min(self.y_list))
-        print('Z list mean value(m): ', statistics.mean(self.z_list)) # 最後取平均值 得到z軸的距離
+        self._z_finial_disrance = statistics.mean(self.z_list)
+        print('Z list mean value(m): ', self._z_finial_disrance) # 最後取平均值 得到z軸的距離
         self._num_count = self._num_count + 1
         print("writing.....", self._num_count)
         plt.plot(self.x_list, self.y_list)
         plt.plot(self.x_list_fix, self.y_list_fix, color='red')
         # plt.gca().invert_xaxis() # x軸逆序显示
         plt.gca().invert_yaxis() # y軸逆序显示
-        plt.show()
+        # plt.show()Z
+        plt.savefig(self.save_image_path + "_" + self._num_count + '.png')
         self.x_list_fix.clear()
         self.y_list_fix.clear()
         self.x_list.clear()

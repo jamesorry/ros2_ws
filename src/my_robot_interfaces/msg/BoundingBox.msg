@@ -7,6 +7,8 @@ uint16 xmin
 uint16 ymin
 uint16 xmax
 uint16 ymax
+float32 x_center
+float32 y_center
 float32 center_dist
 # uint16 img_width
 # uint16 img_height

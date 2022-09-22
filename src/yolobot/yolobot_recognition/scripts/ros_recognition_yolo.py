@@ -24,6 +24,10 @@ import torch.backends.cudnn as cudnn
 
 from my_robot_interfaces.msg import BoundingBoxes, BoundingBox
 import sensor_msgs_py.point_cloud2 as point_cloud2
+from sensor_msgs.msg import Image, PointCloud2
+import matplotlib.pyplot as plt
+import statistics
+import math
 
 FILE = Path(__file__).absolute()
 sys.path.append(FILE.parents[0].as_posix())
@@ -104,6 +108,44 @@ class Camera_subscriber(Node):
             10)
         # self.subscription  # prevent unused variable warning
 
+        # for point_cloud
+        self._num_count = 0
+        self._z_finial_disrance = 0.0
+        self.x_list = []
+        self.y_list = []
+        self.x_list_fix = []
+        self.y_list_fix = []
+        self.z_list = []
+        self.subscriber_ = self.create_subscription(
+            PointCloud2, "/robot1/intel_realsense_r200_depth/points", self.callback_pointcloud_XY_Plot, 10)
+        
+    def callback_pointcloud_XY_Plot(self, data):
+        assert isinstance(data, PointCloud2)
+        gen = point_cloud2.read_points(
+            data, field_names=("x", "y", "z"), skip_nans=True)
+        for p in gen:
+            [(p[0], p[1], p[2]), (p[0], p[1], p[2])]
+            # type(p[0]) and type(p[1]) and type(p[2]) is float
+            x = p[0]
+            y = p[1]
+            z = p[2]
+            # 除去inf的數值
+            if not math.isinf(x) and not math.isinf(y):
+                if (x <= 0.01 and x >= -0.01) and (y <= 0.01 and y >= -0.01):
+                    self.x_list_fix.append(x)
+                    self.y_list_fix.append(y)
+                    self.z_list.append(z)
+                    
+        self._z_finial_disrance = statistics.mean(self.z_list)
+        # print('Z list mean value(m): ', self._z_finial_disrance) # 最後取平均值 得到z軸的距離
+        # self._num_count = self._num_count + 1
+        # print("writing.....", self._num_count)
+        self.x_list_fix.clear()
+        self.y_list_fix.clear()
+        self.x_list.clear()
+        self.y_list.clear()
+        self.z_list.clear()
+        
     def yolovFive2bboxes_msgs(self, bboxes: list, scores: list, cls: list, img_header: Header):
         bboxes_msg = BoundingBoxes()
         bboxes_msg.header = img_header
@@ -116,9 +158,11 @@ class Camera_subscriber(Node):
             one_box.ymin = int(bboxes[1][i])
             one_box.xmax = int(bboxes[2][i])
             one_box.ymax = int(bboxes[3][i])
+            one_box.x_center = abs(one_box.xmax - one_box.xmin) / 2
+            one_box.y_center = abs(one_box.ymax - one_box.ymin) / 2
             one_box.probability = float(score)
             one_box.class_id = cls[i]
-            one_box.center_dist = 2.5
+            one_box.center_dist = self._z_finial_disrance
             bboxes_msg.bounding_boxes.append(one_box)
             i = i+1
         self.publish_bbox.publish(bboxes_msg)
