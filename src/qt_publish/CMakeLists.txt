@@ -72,6 +72,7 @@ target_link_libraries(qt_publish Qt5::Widgets)
 install(DIRECTORY 
   images
   doc_file
+  UI
   DESTINATION share/${PROJECT_NAME}
 )
 
@@ -87,6 +88,8 @@ install(
   scripts/pyqt5_test_02.py
   scripts/SendMapImage.py
   scripts/test_point_cloud.py
+  scripts/pyqt5_control_03.py
+  scripts/start_pyqt5_ui.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
