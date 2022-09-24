@@ -32,7 +32,9 @@ setup(
             "led_panel = my_py_pkg.led_panel:main",
             "battery = my_py_pkg.battery:main",
             "turn_camera_server = my_py_pkg.turn_camera_server:main",
-            "turn_camera_client = my_py_pkg.turn_camera_client:main"
+            "turn_camera_client = my_py_pkg.turn_camera_client:main",
+            "action_client = my_py_pkg.action_client:main",
+            "action_server = my_py_pkg.action_server:main"
         ],
     },
 )
