@@ -43,8 +43,8 @@ def gen_robot_list(number_of_robots):
     #                   'y_pose': 1.5, 'z_pose': 0.01})
     #     robots.append({'name': "robot2", 'x_pose': -1.0,
     #                   'y_pose': 1.5, 'z_pose': 0.01})
-    
-    elif number_of_robots is 2: # this  is for position world_only.model
+
+    elif number_of_robots is 2:  # this  is for position world_only.model
         robots.append({'name': "robot1", 'x_pose': 0.0,
                       'y_pose': 0.5, 'z_pose': 0.01})
         robots.append({'name': "robot2", 'x_pose': 0.0,
@@ -81,13 +81,13 @@ def generate_launch_description():
     #     default_value=os.path.join(
     #         bringup_dir, 'worlds', 'world_house.model'),
     #     description='Full path to world file to load')
-    
+
     declare_world_cmd = DeclareLaunchArgument(
         'world',
         default_value=os.path.join(
             bringup_dir, 'worlds', 'world_only.model'),
         description='Full path to world file to load')
-    
+
     declare_simulator_cmd = DeclareLaunchArgument(
         'simulator',
         default_value='gazebo',
@@ -211,9 +211,9 @@ def generate_launch_description():
                                       'use_rviz': 'False',
                                       'use_simulator': 'False',
                                       'headless': 'False',
-                                    #   "slam": slam,
-                                    #   "slam_toolbox": slam_toolbox,
-                                    #   "slam_gmapping": slam_gmapping,
+                                      #   "slam": slam,
+                                      #   "slam_toolbox": slam_toolbox,
+                                      #   "slam_gmapping": slam_gmapping,
                                       'use_robot_state_pub': use_robot_state_pub}.items()),
                 LogInfo(
                     condition=IfCondition(log_settings),
@@ -257,13 +257,28 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(os.path.join(
             get_package_share_directory('bt_ros2'), 'launch', 'bt_ros2.launch.py'))
     )
+
+    declare_map_pgm_cmd = DeclareLaunchArgument(
+        'map_pgm',
+        default_value=os.path.join(
+            bringup_dir, 'maps', 'turtlebot3_world.pgm'),
+        description='Full path to pgm map to load')
+
+    # run SendMapImage node
+    send_map_image_cmd = Node(
+        package='qt_publish',
+        executable='SendMapImage.py',
+        output='screen',
+        arguments=['--map', LaunchConfiguration('map_pgm')]
+    )
     """ 
     TimerAction() 函数可以在指定的时间后执行一个action, 需要接受参数有
         period:接受一个float, 延迟的时间
         actions:接受一个list, [action_1, action_2,…], 列表中装要执行的action 
     """
     timer_action_1_cmd = TimerAction(period=10.0, actions=[initialPose_cmd])
-    timer_action_2_cmd = TimerAction(period=15.0, actions=[bt_nav_cmd])
+    timer_action_2_cmd = TimerAction(period=12.0, actions=[send_map_image_cmd])
+    timer_action_3_cmd = TimerAction(period=15.0, actions=[bt_nav_cmd])
 
     # Create the launch description and populate
     ld = LaunchDescription()
@@ -282,6 +297,7 @@ def generate_launch_description():
     # ld.add_action(declare_slam_cmd)
     # ld.add_action(declare_slam_toolbox_cmd)
     # ld.add_action(declare_slam_gmapping_cmd)
+    ld.add_action(declare_map_pgm_cmd)
 
     # Add the actions to start gazebo, robots and simulations
     ld.add_action(start_gazebo_cmd)
@@ -293,5 +309,5 @@ def generate_launch_description():
         ld.add_action(simulation_instance_cmd)
 
     ld.add_action(timer_action_1_cmd)
-    # ld.add_action(timer_action_2_cmd)
+    ld.add_action(timer_action_2_cmd)
     return ld
