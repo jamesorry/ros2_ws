@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>926</width>
-    <height>638</height>
+    <width>1101</width>
+    <height>689</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <widget class="QWidget" name="horizontalLayoutWidget">
     <property name="geometry">
      <rect>
-      <x>690</x>
+      <x>860</x>
       <y>550</y>
       <width>231</width>
       <height>51</height>
@@ -43,7 +43,7 @@
    <widget class="QGroupBox" name="groupBox_robot_1">
     <property name="geometry">
      <rect>
-      <x>690</x>
+      <x>860</x>
       <y>100</y>
       <width>231</width>
       <height>211</height>
@@ -122,7 +122,7 @@
    <widget class="QGroupBox" name="groupBox_robot_2">
     <property name="geometry">
      <rect>
-      <x>690</x>
+      <x>860</x>
       <y>320</y>
       <width>231</width>
       <height>211</height>
@@ -198,10 +198,10 @@
      </layout>
     </widget>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
-      <x>690</x>
+      <x>860</x>
       <y>40</y>
       <width>231</width>
       <height>41</height>
@@ -224,10 +224,10 @@
      </item>
     </layout>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
-      <x>690</x>
+      <x>860</x>
       <y>0</y>
       <width>231</width>
       <height>41</height>
@@ -250,18 +250,171 @@
      </item>
     </layout>
    </widget>
-   <widget class="QLabel" name="label_Image">
+   <widget class="QPushButton" name="pushButton_update">
+    <property name="geometry">
+     <rect>
+      <x>860</x>
+      <y>620</y>
+      <width>101</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Update</string>
+    </property>
+   </widget>
+   <widget class="QWidget" name="verticalLayoutWidget_3">
     <property name="geometry">
      <rect>
       <x>10</x>
       <y>10</y>
-      <width>640</width>
-      <height>480</height>
+      <width>641</width>
+      <height>571</height>
+     </rect>
+    </property>
+    <layout class="QVBoxLayout" name="verticalLayout_3">
+     <item>
+      <widget class="QScrollArea" name="scrollArea">
+       <property name="widgetResizable">
+        <bool>true</bool>
+       </property>
+       <widget class="QWidget" name="scrollAreaWidgetContents">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>637</width>
+          <height>567</height>
+         </rect>
+        </property>
+        <widget class="QLabel" name="label_Image">
+         <property name="geometry">
+          <rect>
+           <x>70</x>
+           <y>80</y>
+           <width>491</width>
+           <height>361</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>TextLabel</string>
+         </property>
+        </widget>
+       </widget>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QLabel" name="label_image_origin_shape">
+    <property name="geometry">
+     <rect>
+      <x>570</x>
+      <y>600</y>
+      <width>67</width>
+      <height>17</height>
      </rect>
     </property>
     <property name="text">
      <string>TextLabel</string>
     </property>
+   </widget>
+   <widget class="QLabel" name="label_image_current_shape">
+    <property name="geometry">
+     <rect>
+      <x>570</x>
+      <y>640</y>
+      <width>67</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>TextLabel</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_ratio">
+    <property name="geometry">
+     <rect>
+      <x>480</x>
+      <y>620</y>
+      <width>67</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Ratio</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_click_pos">
+    <property name="geometry">
+     <rect>
+      <x>700</x>
+      <y>490</y>
+      <width>67</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>TextLabel</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_normal_pos">
+    <property name="geometry">
+     <rect>
+      <x>700</x>
+      <y>530</y>
+      <width>67</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>TextLabel</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_real_pos">
+    <property name="geometry">
+     <rect>
+      <x>700</x>
+      <y>560</y>
+      <width>67</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>TextLabel</string>
+    </property>
+   </widget>
+   <widget class="QWidget" name="">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>620</y>
+      <width>461</width>
+      <height>27</height>
+     </rect>
+    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout_10">
+     <item>
+      <widget class="QPushButton" name="pushButton_zoom_in">
+       <property name="text">
+        <string>Zoom In</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSlider" name="Slider_ImageSizeArea">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_zoom_out">
+       <property name="text">
+        <string>Zoom Out</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </widget>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
