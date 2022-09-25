@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1101</width>
-    <height>689</height>
+    <height>774</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -310,7 +310,7 @@
      <rect>
       <x>570</x>
       <y>600</y>
-      <width>67</width>
+      <width>271</width>
       <height>17</height>
      </rect>
     </property>
@@ -323,7 +323,7 @@
      <rect>
       <x>570</x>
       <y>640</y>
-      <width>67</width>
+      <width>271</width>
       <height>17</height>
      </rect>
     </property>
@@ -347,9 +347,9 @@
    <widget class="QLabel" name="label_click_pos">
     <property name="geometry">
      <rect>
-      <x>700</x>
-      <y>490</y>
-      <width>67</width>
+      <x>570</x>
+      <y>670</y>
+      <width>271</width>
       <height>17</height>
      </rect>
     </property>
@@ -360,9 +360,9 @@
    <widget class="QLabel" name="label_normal_pos">
     <property name="geometry">
      <rect>
-      <x>700</x>
-      <y>530</y>
-      <width>67</width>
+      <x>570</x>
+      <y>700</y>
+      <width>271</width>
       <height>17</height>
      </rect>
     </property>
@@ -373,9 +373,9 @@
    <widget class="QLabel" name="label_real_pos">
     <property name="geometry">
      <rect>
-      <x>700</x>
-      <y>560</y>
-      <width>67</width>
+      <x>570</x>
+      <y>730</y>
+      <width>271</width>
       <height>17</height>
      </rect>
     </property>
