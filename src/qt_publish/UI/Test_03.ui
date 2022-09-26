@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1101</width>
+    <width>1141</width>
     <height>774</height>
    </rect>
   </property>
@@ -17,10 +17,10 @@
    <widget class="QWidget" name="horizontalLayoutWidget">
     <property name="geometry">
      <rect>
-      <x>860</x>
-      <y>550</y>
-      <width>231</width>
-      <height>51</height>
+      <x>660</x>
+      <y>540</y>
+      <width>210</width>
+      <height>40</height>
      </rect>
     </property>
     <layout class="QHBoxLayout" name="horizontalLayout_3">
@@ -43,21 +43,21 @@
    <widget class="QGroupBox" name="groupBox_robot_1">
     <property name="geometry">
      <rect>
-      <x>860</x>
+      <x>660</x>
       <y>100</y>
-      <width>231</width>
+      <width>211</width>
       <height>211</height>
      </rect>
     </property>
     <property name="title">
-     <string>Robot_1</string>
+     <string>Robot_1 Position</string>
     </property>
     <widget class="QWidget" name="verticalLayoutWidget">
      <property name="geometry">
       <rect>
        <x>10</x>
        <y>39</y>
-       <width>211</width>
+       <width>187</width>
        <height>151</height>
       </rect>
      </property>
@@ -122,21 +122,21 @@
    <widget class="QGroupBox" name="groupBox_robot_2">
     <property name="geometry">
      <rect>
-      <x>860</x>
+      <x>660</x>
       <y>320</y>
-      <width>231</width>
+      <width>209</width>
       <height>211</height>
      </rect>
     </property>
     <property name="title">
-     <string>Robot_2</string>
+     <string>Robot_2 Position</string>
     </property>
     <widget class="QWidget" name="verticalLayoutWidget_2">
      <property name="geometry">
       <rect>
        <x>10</x>
        <y>39</y>
-       <width>211</width>
+       <width>184</width>
        <height>151</height>
       </rect>
      </property>
@@ -198,71 +198,6 @@
      </layout>
     </widget>
    </widget>
-   <widget class="QWidget" name="layoutWidget">
-    <property name="geometry">
-     <rect>
-      <x>860</x>
-      <y>40</y>
-      <width>231</width>
-      <height>41</height>
-     </rect>
-    </property>
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <item>
-      <widget class="QLabel" name="label_3">
-       <property name="text">
-        <string>Time:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="label_Time">
-       <property name="text">
-        <string>-</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </widget>
-   <widget class="QWidget" name="layoutWidget">
-    <property name="geometry">
-     <rect>
-      <x>860</x>
-      <y>0</y>
-      <width>231</width>
-      <height>41</height>
-     </rect>
-    </property>
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
-     <item>
-      <widget class="QLabel" name="label_2">
-       <property name="text">
-        <string>Date:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="label_Date">
-       <property name="text">
-        <string>-</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </widget>
-   <widget class="QPushButton" name="pushButton_update">
-    <property name="geometry">
-     <rect>
-      <x>860</x>
-      <y>620</y>
-      <width>101</width>
-      <height>31</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Update</string>
-    </property>
-   </widget>
    <widget class="QWidget" name="verticalLayoutWidget_3">
     <property name="geometry">
      <rect>
@@ -305,112 +240,379 @@
      </item>
     </layout>
    </widget>
-   <widget class="QLabel" name="label_image_origin_shape">
+   <widget class="QWidget" name="verticalLayoutWidget_6">
     <property name="geometry">
      <rect>
-      <x>570</x>
-      <y>600</y>
-      <width>271</width>
-      <height>17</height>
+      <x>9</x>
+      <y>580</y>
+      <width>642</width>
+      <height>150</height>
      </rect>
     </property>
-    <property name="text">
-     <string>TextLabel</string>
-    </property>
+    <layout class="QVBoxLayout" name="verticalLayout_6">
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_11">
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout_4">
+         <item>
+          <widget class="QLabel" name="label_image_origin_shape">
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_image_current_shape">
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout_5">
+         <item>
+          <widget class="QLabel" name="label_click_pos">
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_normal_pos">
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_real_pos">
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_10">
+       <item>
+        <widget class="QPushButton" name="pushButton_zoom_in">
+         <property name="text">
+          <string>Zoom In</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSlider" name="Slider_ImageSizeArea">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButton_zoom_out">
+         <property name="text">
+          <string>Zoom Out</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_ratio">
+         <property name="text">
+          <string>Ratio</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
    </widget>
-   <widget class="QLabel" name="label_image_current_shape">
+   <widget class="QWidget" name="verticalLayoutWidget_7">
     <property name="geometry">
      <rect>
-      <x>570</x>
-      <y>640</y>
-      <width>271</width>
-      <height>17</height>
+      <x>662</x>
+      <y>8</y>
+      <width>210</width>
+      <height>80</height>
      </rect>
     </property>
-    <property name="text">
-     <string>TextLabel</string>
-    </property>
+    <layout class="QVBoxLayout" name="verticalLayout_7">
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>Time:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_Time">
+         <property name="text">
+          <string>-</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <item>
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Date:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_Date">
+         <property name="text">
+          <string>-</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
    </widget>
-   <widget class="QLabel" name="label_ratio">
+   <widget class="QGroupBox" name="groupBox">
     <property name="geometry">
      <rect>
-      <x>480</x>
-      <y>620</y>
-      <width>67</width>
-      <height>17</height>
+      <x>902</x>
+      <y>100</y>
+      <width>228</width>
+      <height>211</height>
      </rect>
     </property>
-    <property name="text">
-     <string>Ratio</string>
+    <property name="title">
+     <string>Robot_1 Target</string>
     </property>
+    <widget class="QWidget" name="horizontalLayoutWidget_6">
+     <property name="geometry">
+      <rect>
+       <x>8</x>
+       <y>155</y>
+       <width>205</width>
+       <height>37</height>
+      </rect>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_15">
+      <item>
+       <widget class="QPushButton" name="pushButton_robot_1_clear">
+        <property name="text">
+         <string>clear</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButton_robot_1_send">
+        <property name="text">
+         <string>send</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+    <widget class="QWidget" name="horizontalLayoutWidget_3">
+     <property name="geometry">
+      <rect>
+       <x>8</x>
+       <y>28</y>
+       <width>205</width>
+       <height>129</height>
+      </rect>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_12">
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_9">
+        <item>
+         <widget class="QLabel" name="label">
+          <property name="layoutDirection">
+           <enum>Qt::LeftToRight</enum>
+          </property>
+          <property name="text">
+           <string>X:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_10">
+          <property name="text">
+           <string>Y:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_11">
+          <property name="text">
+           <string>Theta:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_10">
+        <item>
+         <widget class="QLineEdit" name="lineEdit"/>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="lineEdit_2"/>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="lineEdit_3"/>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
    </widget>
-   <widget class="QLabel" name="label_click_pos">
+   <widget class="QGroupBox" name="groupBox_2">
     <property name="geometry">
      <rect>
-      <x>570</x>
-      <y>670</y>
-      <width>271</width>
-      <height>17</height>
+      <x>900</x>
+      <y>320</y>
+      <width>226</width>
+      <height>208</height>
      </rect>
     </property>
-    <property name="text">
-     <string>TextLabel</string>
+    <property name="title">
+     <string>Robot_2 Target</string>
     </property>
-   </widget>
-   <widget class="QLabel" name="label_normal_pos">
-    <property name="geometry">
-     <rect>
-      <x>570</x>
-      <y>700</y>
-      <width>271</width>
-      <height>17</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>TextLabel</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_real_pos">
-    <property name="geometry">
-     <rect>
-      <x>570</x>
-      <y>730</y>
-      <width>271</width>
-      <height>17</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>TextLabel</string>
-    </property>
+    <widget class="QWidget" name="horizontalLayoutWidget_4">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>27</y>
+       <width>205</width>
+       <height>129</height>
+      </rect>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_13">
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_11">
+        <item>
+         <widget class="QLabel" name="label_12">
+          <property name="layoutDirection">
+           <enum>Qt::LeftToRight</enum>
+          </property>
+          <property name="text">
+           <string>X:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_13">
+          <property name="text">
+           <string>Y:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_14">
+          <property name="text">
+           <string>Theta:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_12">
+        <item>
+         <widget class="QLineEdit" name="lineEdit_5"/>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="lineEdit_6"/>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="lineEdit_7"/>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+    <widget class="QWidget" name="horizontalLayoutWidget_5">
+     <property name="geometry">
+      <rect>
+       <x>11</x>
+       <y>155</y>
+       <width>204</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_14">
+      <item>
+       <widget class="QPushButton" name="pushButton_robot_2_clear">
+        <property name="text">
+         <string>clear</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButton_robot_2_send">
+        <property name="text">
+         <string>send</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
    </widget>
    <widget class="QWidget" name="">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>620</y>
-      <width>461</width>
-      <height>27</height>
+      <x>902</x>
+      <y>19</y>
+      <width>230</width>
+      <height>56</height>
      </rect>
     </property>
-    <layout class="QHBoxLayout" name="horizontalLayout_10">
+    <layout class="QHBoxLayout" name="horizontalLayout_16">
      <item>
-      <widget class="QPushButton" name="pushButton_zoom_in">
-       <property name="text">
-        <string>Zoom In</string>
-       </property>
-      </widget>
+      <layout class="QVBoxLayout" name="verticalLayout_8">
+       <item>
+        <widget class="QCheckBox" name="checkBox_robot_1">
+         <property name="text">
+          <string>Robot_1 Target</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="checkBox_robot_2">
+         <property name="text">
+          <string>Robot_2 Target</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
      <item>
-      <widget class="QSlider" name="Slider_ImageSizeArea">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="pushButton_zoom_out">
+      <widget class="QPushButton" name="pushButton_update">
        <property name="text">
-        <string>Zoom Out</string>
+        <string>Update</string>
        </property>
       </widget>
      </item>
