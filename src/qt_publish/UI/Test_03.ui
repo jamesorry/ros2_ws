@@ -379,7 +379,7 @@
      </item>
     </layout>
    </widget>
-   <widget class="QGroupBox" name="groupBox">
+   <widget class="QGroupBox" name="groupBox_Target_robot1">
     <property name="geometry">
      <rect>
       <x>902</x>
@@ -390,6 +390,12 @@
     </property>
     <property name="title">
      <string>Robot_1 Target</string>
+    </property>
+    <property name="checkable">
+     <bool>true</bool>
+    </property>
+    <property name="checked">
+     <bool>false</bool>
     </property>
     <widget class="QWidget" name="horizontalLayoutWidget_6">
      <property name="geometry">
@@ -467,20 +473,20 @@
       <item>
        <layout class="QVBoxLayout" name="verticalLayout_10">
         <item>
-         <widget class="QLineEdit" name="lineEdit"/>
+         <widget class="QLineEdit" name="lineEdit_robot1_target_x"/>
         </item>
         <item>
-         <widget class="QLineEdit" name="lineEdit_2"/>
+         <widget class="QLineEdit" name="lineEdit_robot1_target_y"/>
         </item>
         <item>
-         <widget class="QLineEdit" name="lineEdit_3"/>
+         <widget class="QLineEdit" name="lineEdit_robot1_target_theta"/>
         </item>
        </layout>
       </item>
      </layout>
     </widget>
    </widget>
-   <widget class="QGroupBox" name="groupBox_2">
+   <widget class="QGroupBox" name="groupBox_Target_robot2">
     <property name="geometry">
      <rect>
       <x>900</x>
@@ -491,6 +497,12 @@
     </property>
     <property name="title">
      <string>Robot_2 Target</string>
+    </property>
+    <property name="checkable">
+     <bool>true</bool>
+    </property>
+    <property name="checked">
+     <bool>false</bool>
     </property>
     <widget class="QWidget" name="horizontalLayoutWidget_4">
      <property name="geometry">
@@ -542,13 +554,13 @@
       <item>
        <layout class="QVBoxLayout" name="verticalLayout_12">
         <item>
-         <widget class="QLineEdit" name="lineEdit_5"/>
+         <widget class="QLineEdit" name="lineEdit_robot2_target_x"/>
         </item>
         <item>
-         <widget class="QLineEdit" name="lineEdit_6"/>
+         <widget class="QLineEdit" name="lineEdit_robot2_target_y"/>
         </item>
         <item>
-         <widget class="QLineEdit" name="lineEdit_7"/>
+         <widget class="QLineEdit" name="lineEdit_robot2_target_theta"/>
         </item>
        </layout>
       </item>
@@ -581,7 +593,7 @@
      </layout>
     </widget>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>902</x>
