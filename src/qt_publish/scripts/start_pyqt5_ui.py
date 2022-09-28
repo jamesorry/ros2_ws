@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding:UTF-8 -*-
 from PyQt5 import QtWidgets
-from pyqt5_control_09 import MainWindow_controller
+from pyqt5_control_10 import MainWindow_controller
 
 if __name__ == '__main__':
     import sys
