@@ -78,6 +78,7 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         super().__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+        self.disabled_ui()
         self.setup_control()
         self.setup_controller()
         self.timer = QTimer()
@@ -144,7 +145,7 @@ class MainWindow_controller(QtWidgets.QMainWindow):
             Twist, "/robot1/cmd_vel", 10)
         self._publisher_twist_robot2 = self.node.create_publisher(
             Twist, "/robot2/cmd_vel", 10)
-        
+
         print("start ros2 UI.... OK!!!!")
         rclpy.spin(self.node)
 
@@ -322,19 +323,27 @@ class MainWindow_controller(QtWidgets.QMainWindow):
     def __groupBox_Target_robot2(self):
         self.ui.groupBox_Target_robot1.setChecked(False)
 
-    def update_mouse_click_position(self):
+    def update_mouse_click_position_robot1(self):
         x = self.__pixel_cell_to_pose(
             self.mouse_target_x, self.map_center_pixel_x)
         y = self.__pixel_cell_to_pose(
             self.mouse_target_y, self.map_center_pixel_y)
         if self.ui.groupBox_Target_robot1.isChecked():
-            self.ui.lineEdit_robot1_target_x.setText(str(x))
-            self.ui.lineEdit_robot1_target_y.setText(str(y))
+            self.ui.lineEdit_robot1_target_x.setText(f"{x:.3f}")
+            self.ui.lineEdit_robot1_target_y.setText(f"{y:.3f}")
             if self.ui.lineEdit_robot1_target_theta.text() == "":
                 self.ui.lineEdit_robot1_target_theta.setText("0")
-        elif self.ui.groupBox_Target_robot2.isChecked():
-            self.ui.lineEdit_robot2_target_x.setText(str(x))
-            self.ui.lineEdit_robot2_target_y.setText(str(y))
+        else:
+            print(f"target: {x}, {y}")
+            
+    def update_mouse_click_position_robot2(self):
+        x = self.__pixel_cell_to_pose(
+            self.mouse_target_x, self.map_center_pixel_x)
+        y = self.__pixel_cell_to_pose(
+            self.mouse_target_y, self.map_center_pixel_y)
+        if self.ui.groupBox_Target_robot2.isChecked():
+            self.ui.lineEdit_robot2_target_x.setText(f"{x:.3f}")
+            self.ui.lineEdit_robot2_target_y.setText(f"{y:.3f}")
             if self.ui.lineEdit_robot2_target_theta.text() == "":
                 self.ui.lineEdit_robot2_target_theta.setText("0")
         else:
@@ -364,7 +373,8 @@ class MainWindow_controller(QtWidgets.QMainWindow):
             print("Goal Rejected")
             return None
         print("Robot 1 Goal Accepted ")
-        self.ui.pushButton_robot_1_send.setEnabled(False)
+        # self.ui.pushButton_robot_1_send.setEnabled(False)
+        self.ui.label_target_status_robot1.setText("Goal Accepted")
         self._get_result_future = goal_handle.get_result_async()
         self._get_result_future.add_done_callback(
             self.get_result_robot1_callback)
@@ -372,7 +382,8 @@ class MainWindow_controller(QtWidgets.QMainWindow):
     def get_result_robot1_callback(self, future):
         result = future.result().result
         print("Robot 1 Target Finish")
-        self.ui.pushButton_robot_1_send.setEnabled(True)
+        # self.ui.pushButton_robot_1_send.setEnabled(True)
+        self.ui.label_target_status_robot1.setText("Goal Finish")
 
     def goal_response_robot2_callback(self, future):
         goal_handle = future.result()
@@ -380,6 +391,7 @@ class MainWindow_controller(QtWidgets.QMainWindow):
             print("Goal Rejected")
             return None
         print("Robot 2 Goal Accepted ")
+        self.ui.label_target_status_robot2.setText("Goal Accepted")
         self._get_result_future = goal_handle.get_result_async()
         self._get_result_future.add_done_callback(
             self.get_result_robot2_callback)
@@ -387,15 +399,20 @@ class MainWindow_controller(QtWidgets.QMainWindow):
     def get_result_robot2_callback(self, future):
         result = future.result().result
         print("Robot 2 Target Finish")
+        self.ui.label_target_status_robot2.setText("Goal Finish")
 
     def publish_robot_position_target(self):
         if self.ui.groupBox_Target_robot1.isChecked():
             x = float(self.ui.lineEdit_robot1_target_x.text())
             y = float(self.ui.lineEdit_robot1_target_y.text())
-            theta = int(self.ui.lineEdit_robot1_target_theta.text())
-            if theta > 360 or theta < 0:
-                theta = 0
-                self.ui.lineEdit_robot1_target_theta.setText("0")
+            theta = (int(self.ui.lineEdit_robot1_target_theta.text()))
+            self.ui.lineEdit_robot1_target_theta.setText(str(theta))
+            theta = theta - 0
+            if theta > 360:
+                theta = theta - 360
+            elif theta < 0:
+                theta = theta + 360
+            print(f"theta1: {theta}")
             result = self.handle_action_rpy_to_quaternion(x, y, theta)
             self._action_client_robot1.wait_for_server()
             self._send_goal_future_robot1 = self._action_client_robot1.send_goal_async(
@@ -408,11 +425,12 @@ class MainWindow_controller(QtWidgets.QMainWindow):
             y = float(self.ui.lineEdit_robot2_target_y.text())
             theta = (int(self.ui.lineEdit_robot2_target_theta.text()))
             self.ui.lineEdit_robot2_target_theta.setText(str(theta))
-            theta = theta - 5
+            theta = theta - 0
             if theta > 360:
                 theta = theta - 360
             elif theta < 0:
                 theta = theta + 360
+            print(f"theta2: {theta}")
             result = self.handle_action_rpy_to_quaternion(x, y, theta)
             self._action_client_robot2.wait_for_server()
             self._send_goal_future_robot2 = self._action_client_robot2.send_goal_async(
@@ -437,8 +455,10 @@ class MainWindow_controller(QtWidgets.QMainWindow):
             self.__groupBox_Target_robot1)
         self.ui.groupBox_Target_robot2.clicked.connect(
             self.__groupBox_Target_robot2)
-        self.ui.pushButton_update.clicked.connect(
-            self.update_mouse_click_position)
+        self.ui.pushButton_update_robot1.clicked.connect(
+            self.update_mouse_click_position_robot1)
+        self.ui.pushButton_update_robot2.clicked.connect(
+            self.update_mouse_click_position_robot2)
         self.ui.pushButton_robot_1_clear.clicked.connect(
             self.clear_position_text)
         self.ui.pushButton_robot_2_clear.clicked.connect(
@@ -464,11 +484,15 @@ class MainWindow_controller(QtWidgets.QMainWindow):
 
     def start_thread(self):
         self.thread_a.start()  # 啟動執行緒
+        if not self._update_parameter_timer.isActive():
+            self._update_parameter_timer.start(100)
+        self.enabled_ui()
 
     def stop_thread(self):
         self.shutdown_controller_plugin()
         self.thread_a.quit()
         rclpy.shutdown()
+        self.disabled_ui()
 
     def handle_rpy_to_quaternion(self, x, y, theta):
         t = PoseStamped()
@@ -513,6 +537,23 @@ class MainWindow_controller(QtWidgets.QMainWindow):
             self.robot_2_quaternion['z'], self.robot_2_quaternion['z']
         )
         print(self.robot_2_euler_angles)
+        
+    # ========================================================================================
+    # enable all group box
+    def disabled_ui(self):
+        self.ui.groupBox_robot_1.setEnabled(False)
+        self.ui.groupBox_robot_2.setEnabled(False)
+        self.ui.groupBox_Target_robot1.setEnabled(False)
+        self.ui.groupBox_Target_robot2.setEnabled(False)
+        self.ui.groupBox_controller_robot1.setEnabled(False)
+        self.ui.groupBox_controller_robot2.setEnabled(False)
+    def enabled_ui(self):
+        self.ui.groupBox_robot_1.setEnabled(True)
+        self.ui.groupBox_robot_2.setEnabled(True)
+        self.ui.groupBox_Target_robot1.setEnabled(True)
+        self.ui.groupBox_Target_robot2.setEnabled(True)
+        self.ui.groupBox_controller_robot1.setEnabled(True)
+        self.ui.groupBox_controller_robot2.setEnabled(True)
     # ========================================================================================
 
     def init_map_img(self, img):
@@ -583,9 +624,9 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         self.slider_middle_value = 500
         self._publisher_twist_robot1 = None
         self._publisher_twist_robot2 = None
-        
+
         self.ui.groupBox_controller_robot1.setChecked(False)
-        self.ui.Slider_z_angular_robot1.setInvertedAppearance(False)
+        self.ui.Slider_z_angular_robot1.setInvertedAppearance(True)
         self.ui.Slider_x_linear_robot1.valueChanged.connect(
             self._on_x_linear_slider_changed_robot1)
         self.ui.Slider_z_angular_robot1.valueChanged.connect(
@@ -602,10 +643,11 @@ class MainWindow_controller(QtWidgets.QMainWindow):
             self._on_reset_z_angular_pressed_robot1)
         self.ui.pushButton_decrease_z_angular_robot1.pressed.connect(
             self._on_strong_decrease_z_angular_pressed_robot1)
-
+        self.ui.pushButton_stop_moving_robot1.pressed.connect(
+            self._on_stop_moving_robot1)
 
         self.ui.groupBox_controller_robot2.setChecked(False)
-        self.ui.Slider_z_angular_robot2.setInvertedAppearance(False)
+        self.ui.Slider_z_angular_robot2.setInvertedAppearance(True)
         self.ui.Slider_z_angular_robot2.valueChanged.connect(
             self._on_z_angular_slider_changed_robot2)
         self.ui.Slider_x_linear_robot2.valueChanged.connect(
@@ -622,20 +664,25 @@ class MainWindow_controller(QtWidgets.QMainWindow):
             self._on_reset_z_angular_pressed_robot2)
         self.ui.pushButton_decrease_z_angular_robot2.pressed.connect(
             self._on_strong_decrease_z_angular_pressed_robot2)
+        self.ui.pushButton_stop_moving_robot2.pressed.connect(
+            self._on_stop_moving_robot2)
 
         self._on_x_linear_slider_changed_robot1()
         self._on_x_linear_slider_changed_robot2()
         self._on_z_angular_slider_changed_robot1()
         self._on_z_angular_slider_changed_robot2()
 
-
     def shutdown_controller_plugin(self):
         self._update_parameter_timer.stop()
-        
+
     def _on_parameter_changed(self):
         self._on_parameter_changed_robot1()
         self._on_parameter_changed_robot2()
     """ Robot1 ========================================================================================== """
+
+    def _on_stop_moving_robot1(self):
+        self._on_reset_x_linear_pressed_robot1()
+        self._on_reset_z_angular_pressed_robot1()
 
     def _on_x_linear_slider_changed_robot1(self):
         self.ui.label_current_x_linear_robot1.setText(
@@ -690,7 +737,8 @@ class MainWindow_controller(QtWidgets.QMainWindow):
 
     def _on_parameter_changed_robot1(self):
         self._send_twist_robot1(
-            (self.ui.Slider_x_linear_robot1.value()-self.slider_middle_value) / self.slider_factor,
+            (self.ui.Slider_x_linear_robot1.value() -
+             self.slider_middle_value) / self.slider_factor,
             (self.ui.Slider_z_angular_robot1.value()-self.slider_middle_value) / self.slider_factor)
 
     def _send_twist_robot1(self, x_linear, z_angular):
@@ -715,6 +763,10 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         self._publisher_twist_robot1.publish(twist)
 
     """ Robot2 ========================================================================================== """
+
+    def _on_stop_moving_robot2(self):
+        self._on_reset_x_linear_pressed_robot2()
+        self._on_reset_z_angular_pressed_robot2()
 
     def _on_x_linear_slider_changed_robot2(self):
         self.ui.label_current_x_linear_robot2.setText(
@@ -770,7 +822,8 @@ class MainWindow_controller(QtWidgets.QMainWindow):
 
     def _on_parameter_changed_robot2(self):
         self._send_twist_robot2(
-            (self.ui.Slider_x_linear_robot2.value()-self.slider_middle_value) / self.slider_factor,
+            (self.ui.Slider_x_linear_robot2.value() -
+             self.slider_middle_value) / self.slider_factor,
             (self.ui.Slider_z_angular_robot2.value()-self.slider_middle_value) / self.slider_factor)
 
     def _send_twist_robot2(self, x_linear, z_angular):
