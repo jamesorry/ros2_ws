@@ -1,0 +1,8 @@
+<RCC>
+  <qresource prefix="newPrefix">
+    <file>left_rotation.png</file>
+    <file>rigth_rotation.png</file>
+    <file>flecha_abajo.png</file>
+    <file>flecha_arriba.png</file>
+  </qresource>
+</RCC>

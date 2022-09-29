@@ -1,0 +1,8 @@
+<RCC>
+  <qresource prefix="icon">
+    <file>../UI/icon/flecha_abajo.png</file>
+    <file>../UI/icon/flecha_arriba.png</file>
+    <file>../UI/icon/left_rotation.png</file>
+    <file>../UI/icon/rigth_rotation.png</file>
+  </qresource>
+</RCC>
