@@ -135,8 +135,9 @@ class Camera_subscriber(Node):
                     self.x_list_fix.append(x)
                     self.y_list_fix.append(y)
                     self.z_list.append(z)
-                    
-        self._z_finial_disrance = statistics.mean(self.z_list)
+        
+        if len(self.z_list) != 0:
+            self._z_finial_disrance = statistics.mean(self.z_list)
         # print('Z list mean value(m): ', self._z_finial_disrance) # 最後取平均值 得到z軸的距離
         # self._num_count = self._num_count + 1
         # print("writing.....", self._num_count)

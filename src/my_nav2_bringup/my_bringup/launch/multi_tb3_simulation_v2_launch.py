@@ -45,17 +45,17 @@ def gen_robot_list(number_of_robots):
     #                   'y_pose': 1.5, 'z_pose': 0.01})
 
     # 2022/09/30 modify===========================================
-    elif number_of_robots is 2:  # this  is for position world_only.model
-        robots.append({'name': "robot1", 'x_pose': 0.0,
-                      'y_pose': 0.5, 'z_pose': 0.01})
-        robots.append({'name': "robot2", 'x_pose': 0.0,
-                      'y_pose': -0.5, 'z_pose': 0.01})
-    
-    # elif number_of_robots is 2:  # this  is for position my_own_world_only.model
+    # elif number_of_robots is 2:  # this  is for position world_only.model
     #     robots.append({'name': "robot1", 'x_pose': 0.0,
-    #                   'y_pose': 1.0, 'z_pose': 0.01})
+    #                   'y_pose': 0.5, 'z_pose': 0.01})
     #     robots.append({'name': "robot2", 'x_pose': 0.0,
-    #                   'y_pose': -1.5, 'z_pose': 0.01})
+    #                   'y_pose': -0.5, 'z_pose': 0.01})
+    
+    elif number_of_robots is 2:  # this  is for position my_own_world_only.model
+        robots.append({'name': "robot1", 'x_pose': 0.0,
+                      'y_pose': 1.0, 'z_pose': 0.01})
+        robots.append({'name': "robot2", 'x_pose': 0.0,
+                      'y_pose': -1.5, 'z_pose': 0.01})
     # 2022/09/30 modify===========================================
     return robots
 
@@ -91,17 +91,17 @@ def generate_launch_description():
     #     description='Full path to world file to load')
 
     # 2022/09/30 modify===========================================
-    declare_world_cmd = DeclareLaunchArgument(
-        'world',
-        default_value=os.path.join(
-            bringup_dir, 'worlds', 'world_only.model'),
-        description='Full path to world file to load')
-    
     # declare_world_cmd = DeclareLaunchArgument(
     #     'world',
     #     default_value=os.path.join(
-    #         bringup_dir, 'worlds', 'my_own_world_only.model'),
+    #         bringup_dir, 'worlds', 'world_only.model'),
     #     description='Full path to world file to load')
+    
+    declare_world_cmd = DeclareLaunchArgument(
+        'world',
+        default_value=os.path.join(
+            bringup_dir, 'worlds', 'my_own_world_only.model'),
+        description='Full path to world file to load')
     # 2022/09/30 modify===========================================
 
     declare_simulator_cmd = DeclareLaunchArgument(
@@ -116,29 +116,29 @@ def generate_launch_description():
     #     description='Full path to map file to load')
 
     # 2022/09/30 modify===========================================
-    declare_map_yaml_cmd = DeclareLaunchArgument(
-        'map',
-        default_value=os.path.join(
-            bringup_dir, 'maps', 'turtlebot3_world.yaml'),
-        description='Full path to map file to load')
-    
     # declare_map_yaml_cmd = DeclareLaunchArgument(
     #     'map',
     #     default_value=os.path.join(
-    #         bringup_dir, 'maps', 'my_own_map_v2.yaml'),
+    #         bringup_dir, 'maps', 'turtlebot3_world.yaml'),
     #     description='Full path to map file to load')
+    
+    declare_map_yaml_cmd = DeclareLaunchArgument(
+        'map',
+        default_value=os.path.join(
+            bringup_dir, 'maps', 'my_own_map_v2.yaml'),
+        description='Full path to map file to load')
     # 2022/09/30 modify===========================================
 
     declare_robot1_params_file_cmd = DeclareLaunchArgument(
         'robot1_params_file',
         default_value=os.path.join(
-            bringup_dir, 'params', 'nav2_fix_multirobot_params_1.yaml'),
+            bringup_dir, 'params', 'nav2_fix_multirobot_params_1_v2.yaml'), # 2022/09/30 modify
         description='Full path to the ROS2 parameters file to use for robot1 launched nodes')
 
     declare_robot2_params_file_cmd = DeclareLaunchArgument(
         'robot2_params_file',
         default_value=os.path.join(
-            bringup_dir, 'params', 'nav2_fix_multirobot_params_2.yaml'),
+            bringup_dir, 'params', 'nav2_fix_multirobot_params_2_v2.yaml'), # 2022/09/30 modify
         description='Full path to the ROS2 parameters file to use for robot2 launched nodes')
 
     declare_bt_xml_cmd = DeclareLaunchArgument(
@@ -285,7 +285,7 @@ def generate_launch_description():
     declare_map_pgm_cmd = DeclareLaunchArgument(
         'map_pgm',
         default_value=os.path.join(
-            bringup_dir, 'maps', 'turtlebot3_world.pgm'),
+            bringup_dir, 'maps', 'my_own_map_v2.pgm'), # 2022/09/30 modify
         description='Full path to pgm map to load')
 
     # run SendMapImage node
