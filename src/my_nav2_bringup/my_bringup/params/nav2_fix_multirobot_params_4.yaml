@@ -178,7 +178,7 @@ local_costmap:
         enabled: True
         observation_sources: scan
         scan:
-          topic: /robot3/scan
+          topic: /robot4/scan
           max_obstacle_height: 2.0
           clearing: True
           marking: True
@@ -233,7 +233,7 @@ local_costmap:
         mark_threshold: 0
         observation_sources: pointcloud
         pointcloud:
-          topic: /robot3/camera/pointcloud
+          topic: /robot4/camera/pointcloud
           max_obstacle_height: 2.0
           clearing: True
           marking: True
@@ -272,7 +272,7 @@ global_costmap:
         enabled: True
         observation_sources: scan
         scan:
-          topic: /robot3/scan
+          topic: /robot4/scan
           max_obstacle_height: 2.0
           clearing: True
           marking: True
@@ -327,7 +327,7 @@ global_costmap:
         mark_threshold: 0
         observation_sources: pointcloud
         pointcloud:
-          topic: /robot3/camera/pointcloud
+          topic: /robot4/camera/pointcloud
           max_obstacle_height: 2.0
           clearing: True
           marking: True

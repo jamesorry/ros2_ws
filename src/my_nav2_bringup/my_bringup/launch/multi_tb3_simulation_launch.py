@@ -57,6 +57,25 @@ def gen_robot_list(number_of_robots):
     #     robots.append({'name': "robot2", 'x_pose': 0.0,
     #                   'y_pose': -1.5, 'z_pose': 0.01})
     # 2022/09/30 modify===========================================
+    
+    # 2022/10/01 modify
+    elif number_of_robots is 3:  # this  is for position world_only.model
+        robots.append({'name': "robot1", 'x_pose': 0.0,
+                      'y_pose': 0.5, 'z_pose': 0.01})
+        robots.append({'name': "robot2", 'x_pose': 0.0,
+                      'y_pose': -0.5, 'z_pose': 0.01})
+        robots.append({'name': "robot3", 'x_pose': 0.0,
+                      'y_pose': -1.5, 'z_pose': 0.01})
+    
+    elif number_of_robots is 4:  # this  is for position world_only.model
+        robots.append({'name': "robot1", 'x_pose': 0.0,
+                      'y_pose': 0.5, 'z_pose': 0.01})
+        robots.append({'name': "robot2", 'x_pose': 0.0,
+                      'y_pose': -0.5, 'z_pose': 0.01})
+        robots.append({'name': "robot3", 'x_pose': 0.0,
+                      'y_pose': -1.5, 'z_pose': 0.01})
+        robots.append({'name': "robot4", 'x_pose': 0.0,
+                      'y_pose': 1.5, 'z_pose': 0.01})
     return robots
 
 
@@ -65,7 +84,8 @@ def generate_launch_description():
     bringup_dir = get_package_share_directory('my_bringup')
     launch_dir = os.path.join(bringup_dir, 'launch')
 
-    robots = gen_robot_list(2)
+    # robots = gen_robot_list(2)
+    robots = gen_robot_list(4) # 2022/10/01 modify
 
     # Simulation settings
     world = LaunchConfiguration('world')
@@ -140,6 +160,19 @@ def generate_launch_description():
         default_value=os.path.join(
             bringup_dir, 'params', 'nav2_fix_multirobot_params_2.yaml'),
         description='Full path to the ROS2 parameters file to use for robot2 launched nodes')
+
+    # 2022/10/01 modify
+    declare_robot3_params_file_cmd = DeclareLaunchArgument(
+        'robot3_params_file',
+        default_value=os.path.join(
+            bringup_dir, 'params', 'nav2_fix_multirobot_params_3.yaml'),
+        description='Full path to the ROS2 parameters file to use for robot3 launched nodes')
+    
+    declare_robot4_params_file_cmd = DeclareLaunchArgument(
+        'robot4_params_file',
+        default_value=os.path.join(
+            bringup_dir, 'params', 'nav2_fix_multirobot_params_4.yaml'),
+        description='Full path to the ROS2 parameters file to use for robot4 launched nodes')
 
     declare_bt_xml_cmd = DeclareLaunchArgument(
         'default_bt_xml_filename',
@@ -313,6 +346,8 @@ def generate_launch_description():
     ld.add_action(declare_map_yaml_cmd)
     ld.add_action(declare_robot1_params_file_cmd)
     ld.add_action(declare_robot2_params_file_cmd)
+    ld.add_action(declare_robot3_params_file_cmd)
+    ld.add_action(declare_robot4_params_file_cmd)
     ld.add_action(declare_bt_xml_cmd)
     ld.add_action(declare_use_rviz_cmd)
     ld.add_action(declare_autostart_cmd)
