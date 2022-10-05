@@ -9,7 +9,6 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-
 class Ui_CameraWindow(object):
     def setupUi(self, CameraWindow):
         CameraWindow.setObjectName("CameraWindow")

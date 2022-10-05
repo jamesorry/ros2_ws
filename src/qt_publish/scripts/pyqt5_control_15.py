@@ -37,7 +37,10 @@ from nav2_msgs.action import NavigateToPose
 from builtin_interfaces.msg import Duration
 from geometry_msgs.msg import Twist
 # TODO: PYQT5 界面可以與ros2 topic 建立關係
+from sensor_msgs.msg import Image
 
+
+bridge = CvBridge()
 
 def quaternion_to_euler_angles(x, y, z, w):
     # 四元數轉歐拉角
@@ -123,12 +126,21 @@ class MainWindow_controller(QtWidgets.QMainWindow):
 
         self.sub_robot1_position = self.node.create_subscription(
             Odometry, '/robot1/odom', self.sub_robot_1_position, 10)
+        self.sub_robot1_position
 
         self.sub_robot2_position = self.node.create_subscription(
             Odometry, '/robot2/odom', self.sub_robot_2_position, 10)
+        self.sub_robot2_position
 
         self.sub_map_image = self.node.create_subscription(
             SendMapImage, '/SendMapImageIng', self.loadImage, 10)
+        self.sub_map_image
+
+        self._publisher_twist_robot1 = self.node.create_publisher(
+            Twist, "/robot1/cmd_vel", 10)
+
+        self._publisher_twist_robot2 = self.node.create_publisher(
+            Twist, "/robot2/cmd_vel", 10)
 
         # self.pub_robot1_target = self.node.create_publisher(
         #     PoseStamped, "/robot1/goal_pose", 10)
@@ -144,26 +156,25 @@ class MainWindow_controller(QtWidgets.QMainWindow):
 
         self.sub_bounding_boxes_robot1 = self.node.create_subscription(
             BoundingBoxes, '/robot1/yolov5/bounding_boxes', self.get_robot1_distance, 10)
+        self.sub_bounding_boxes_robot1
 
-        # self.sub_bounding_boxes_robot2 = self.node.create_subscription(
-        #     BoundingBoxes, '/robot2/yolov5/bounding_boxes', self.get_robot2_distance, 10)
+        self.sub_bounding_boxes_robot2 = self.node.create_subscription(
+            BoundingBoxes, '/robot2/yolov5/bounding_boxes', self.get_robot2_distance, 10)
+        self.sub_bounding_boxes_robot2
+
         self.yolo_result_robot1 = {"class_id": [],
                                    "probability": [],
                                    "center_dist": [],
                                    "position": []
                                    }
-        self.check_num = 0
+        self.check_num_robot1 = 0
+        self.check_num_robot2 = 0
         self.distance_mean = 0.0
         self.yolo_result_robot2 = {"class_id": [],
                                    "probability": [],
                                    "center_dist": [],
                                    "position": []
                                    }
-
-        self._publisher_twist_robot1 = self.node.create_publisher(
-            Twist, "/robot1/cmd_vel", 10)
-        self._publisher_twist_robot2 = self.node.create_publisher(
-            Twist, "/robot2/cmd_vel", 10)
 
         print("start ros2 UI.... OK!!!!")
         rclpy.spin(self.node)
@@ -175,9 +186,9 @@ class MainWindow_controller(QtWidgets.QMainWindow):
             # print(f"probability: {score.probability}")
             # print(f"center_dist: {score.center_dist}")
             if score.class_id in self.yolo_result_robot1["class_id"]:
-                self.check_num = self.check_num + 1
+                self.check_num_robot1 = self.check_num_robot1 + 1
                 self.distance_mean = self.distance_mean + score.center_dist
-                if self.check_num > 10:
+                if self.check_num_robot1 > 10:
                     # print("last: " + str(score.center_dist))
                     self.yolo_result_robot1["class_id"].append(score.class_id)
                     self.yolo_result_robot1["probability"].append(
@@ -187,7 +198,7 @@ class MainWindow_controller(QtWidgets.QMainWindow):
                     position = self.get_another_point(float(self.robot_1_position['x']), -1.0*float(
                         self.robot_1_position['y']), float(self.robot_1_euler_angles['yaw']), score.center_dist)
                     self.yolo_result_robot1["position"].append(position)
-                    self.check_num = 0
+                    self.check_num_robot1 = 0
                     break
             else:
                 # print("first: " + str(score.center_dist))
@@ -204,12 +215,44 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         # print(self.yolo_result_robot1)
         # print("========================End line=======================")
 
+    def get_robot2_distance(self, data: BoundingBoxes):
+        for score in data.bounding_boxes:
+            # print(score)
+            # print(f"class_id: {score.class_id}")
+            # print(f"probability: {score.probability}")
+            # print(f"center_dist: {score.center_dist}")
+            if score.class_id in self.yolo_result_robot2["class_id"]:
+                self.check_num_robot2 = self.check_num_robot2 + 1
+                self.distance_mean = self.distance_mean + score.center_dist
+                if self.check_num_robot2 > 10:
+                    # print("last: " + str(score.center_dist))
+                    self.yolo_result_robot2["class_id"].append(score.class_id)
+                    self.yolo_result_robot2["probability"].append(
+                        score.probability)
+                    self.yolo_result_robot2["center_dist"].append(
+                        self.distance_mean / 5.0)
+                    position = self.get_another_point(float(self.robot_2_position['x']), -1.0*float(
+                        self.robot_2_position['y']), float(self.robot_2_euler_angles['yaw']), score.center_dist)
+                    self.yolo_result_robot2["position"].append(position)
+                    self.check_num_robot2 = 0
+                    break
+            else:
+                # print("first: " + str(score.center_dist))
+                if score.center_dist < 1.5:
+                    self.yolo_result_robot2["class_id"].append(score.class_id)
+                    self.yolo_result_robot2["probability"].append(
+                        score.probability)
+                    self.yolo_result_robot2["center_dist"].append(
+                        score.center_dist)
+                    position = self.get_another_point(float(self.robot_2_position['x']), -1.0*float(
+                        self.robot_2_position['y']), float(self.robot_2_euler_angles['yaw']), score.center_dist)
+                    self.yolo_result_robot2["position"].append(position)
+
     def loadImage(self, img: SendMapImage):
         """ This function will load the user selected image
                 and set it to label using the setPhoto function
         """
         if(self.Map_Image is None):
-            bridge = CvBridge()
             self.Map_Image = bridge.imgmsg_to_cv2(img.map_image, "bgr8")
             self.Init_Map_Image = self.Map_Image
             self.origin_height, self.origin_width, self.origin_channel = self.Init_Map_Image.shape
@@ -1184,6 +1227,61 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         self.ui.pushButton_show_camera_window.clicked.connect(
             self.show_camera_window
         )
-
+        self.camera_window_ui.comboBox_robot_n.addItems(
+            ["", "Robot_1", "Robot_2"])
+        self.camera_window_ui.comboBox_robot_n.activated.connect(self.robot_yolo_image)
+        self._update_show_camera_timer = QTimer(self)
+        self._update_show_camera_timer.timeout.connect(self.reflash_camera_image)
+        self._update_show_camera_timer.start(100)
+        self.sub_yolov5_image_raw_robot1 = None
+        self.sub_yolov5_image_raw_robot2 = None
+        self.robot_camera_img = {"Robot_1": None, "Robot_2": None}
+    
+    def reflash_camera_image(self):
+        try:
+            if self.camera_window_ui.comboBox_robot_n.currentIndex() == 1:
+                height, width, channel = self.robot_camera_img["Robot_1"].shape
+                bytesPerline = 3 * width
+                qImg = QImage(self.robot_camera_img["Robot_1"], width, height, bytesPerline, QImage.Format_RGB888).rgbSwapped()
+                self.camera_window_ui.label_camera_image.setPixmap(QPixmap.fromImage(qImg))
+            elif self.camera_window_ui.comboBox_robot_n.currentIndex() == 2:
+                height, width, channel = self.robot_camera_img["Robot_2"].shape
+                bytesPerline = 3 * width
+                qImg = QImage(self.robot_camera_img["Robot_2"], width, height, bytesPerline, QImage.Format_RGB888).rgbSwapped()
+                self.camera_window_ui.label_camera_image.setPixmap(QPixmap.fromImage(qImg))
+            else:
+                self.camera_window_ui.label_camera_image.setPixmap(QPixmap(""))
+        except Exception as e:
+            print(e)
+            self.camera_window_ui.label_camera_image.setPixmap(QPixmap(""))
+            
     def show_camera_window(self):
-        self._camera_window.show()
+        if not self._camera_window.isVisible():
+            self._camera_window.show()
+            self.camera_window_ui.comboBox_robot_n.setCurrentIndex(0)
+            print("show_camera_window")
+        
+    def get_robot1_yolov5_image(self, image_date):
+        img = bridge.imgmsg_to_cv2(image_date, "bgr8")
+        self.robot_camera_img["Robot_1"] = img.copy()
+    
+    def get_robot2_yolov5_image(self, image_date):
+        img = bridge.imgmsg_to_cv2(image_date, "bgr8")
+        self.robot_camera_img["Robot_2"] = img.copy()
+
+    def robot_yolo_image(self):
+        if self.camera_window_ui.comboBox_robot_n.currentIndex() == 1:
+            self.sub_yolov5_image_raw_robot1 = self.node.create_subscription(
+                Image, '/robot1/yolov5/image_raw', self.get_robot1_yolov5_image, 10)
+            self.sub_yolov5_image_raw_robot1
+            if self.sub_yolov5_image_raw_robot2 != None:
+                self.node.destroy_subscription(self.sub_yolov5_image_raw_robot2)
+                
+        elif self.camera_window_ui.comboBox_robot_n.currentIndex() == 2:
+            self.sub_yolov5_image_raw_robot2 = self.node.create_subscription(
+            Image, '/robot2/yolov5/image_raw', self.get_robot2_yolov5_image, 10)
+            self.sub_yolov5_image_raw_robot2
+            if self.sub_yolov5_image_raw_robot1 != None:
+                self.node.destroy_subscription(self.sub_yolov5_image_raw_robot1)
+    
+        

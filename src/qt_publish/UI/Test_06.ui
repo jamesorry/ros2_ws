@@ -41,6 +41,11 @@
      </item>
      <item>
       <widget class="QPushButton" name="pushButton_start">
+       <property name="font">
+        <font>
+         <pointsize>9</pointsize>
+        </font>
+       </property>
        <property name="text">
         <string>Start</string>
        </property>
@@ -48,6 +53,11 @@
      </item>
      <item>
       <widget class="QPushButton" name="pushButton_stop">
+       <property name="font">
+        <font>
+         <pointsize>9</pointsize>
+        </font>
+       </property>
        <property name="text">
         <string>Stop</string>
        </property>
@@ -282,10 +292,10 @@
         <widget class="QLabel" name="label_Image">
          <property name="geometry">
           <rect>
-           <x>35</x>
-           <y>90</y>
-           <width>491</width>
-           <height>361</height>
+           <x>2</x>
+           <y>2</y>
+           <width>569</width>
+           <height>544</height>
           </rect>
          </property>
          <property name="text">
@@ -311,6 +321,11 @@
       <layout class="QHBoxLayout" name="horizontalLayout_11">
        <item>
         <widget class="QPushButton" name="pushButton_save_recongnition">
+         <property name="font">
+          <font>
+           <pointsize>8</pointsize>
+          </font>
+         </property>
          <property name="text">
           <string>Save recognition</string>
          </property>
@@ -320,6 +335,11 @@
         <layout class="QVBoxLayout" name="verticalLayout_4">
          <item>
           <widget class="QLabel" name="label_image_origin_shape">
+           <property name="font">
+            <font>
+             <pointsize>9</pointsize>
+            </font>
+           </property>
            <property name="text">
             <string>TextLabel</string>
            </property>
@@ -327,6 +347,11 @@
          </item>
          <item>
           <widget class="QLabel" name="label_image_current_shape">
+           <property name="font">
+            <font>
+             <pointsize>9</pointsize>
+            </font>
+           </property>
            <property name="text">
             <string>TextLabel</string>
            </property>
@@ -338,6 +363,11 @@
         <layout class="QVBoxLayout" name="verticalLayout_5">
          <item>
           <widget class="QLabel" name="label_click_pos">
+           <property name="font">
+            <font>
+             <pointsize>9</pointsize>
+            </font>
+           </property>
            <property name="text">
             <string>TextLabel</string>
            </property>
@@ -345,6 +375,11 @@
          </item>
          <item>
           <widget class="QLabel" name="label_normal_pos">
+           <property name="font">
+            <font>
+             <pointsize>9</pointsize>
+            </font>
+           </property>
            <property name="text">
             <string>TextLabel</string>
            </property>
@@ -352,6 +387,11 @@
          </item>
          <item>
           <widget class="QLabel" name="label_real_pos">
+           <property name="font">
+            <font>
+             <pointsize>9</pointsize>
+            </font>
+           </property>
            <property name="text">
             <string>TextLabel</string>
            </property>
@@ -402,7 +442,7 @@
           </font>
          </property>
          <property name="text">
-          <string>       </string>
+          <string/>
          </property>
         </widget>
        </item>
@@ -433,7 +473,7 @@
       <rect>
        <x>6</x>
        <y>41</y>
-       <width>258</width>
+       <width>215</width>
        <height>174</height>
       </rect>
      </property>
@@ -498,6 +538,11 @@
          <layout class="QHBoxLayout" name="horizontalLayout_15">
           <item>
            <widget class="QPushButton" name="pushButton_robot_1_clear">
+            <property name="font">
+             <font>
+              <pointsize>9</pointsize>
+             </font>
+            </property>
             <property name="text">
              <string>clear</string>
             </property>
@@ -505,6 +550,11 @@
           </item>
           <item>
            <widget class="QPushButton" name="pushButton_robot_1_send">
+            <property name="font">
+             <font>
+              <pointsize>9</pointsize>
+             </font>
+            </property>
             <property name="text">
              <string>send</string>
             </property>
@@ -512,6 +562,11 @@
           </item>
           <item>
            <widget class="QPushButton" name="pushButton_update_robot1">
+            <property name="font">
+             <font>
+              <pointsize>9</pointsize>
+             </font>
+            </property>
             <property name="text">
              <string>Update</string>
             </property>
@@ -571,7 +626,7 @@
       <rect>
        <x>9</x>
        <y>40</y>
-       <width>207</width>
+       <width>210</width>
        <height>173</height>
       </rect>
      </property>
@@ -636,6 +691,11 @@
          <layout class="QHBoxLayout" name="horizontalLayout_14">
           <item>
            <widget class="QPushButton" name="pushButton_robot_2_clear">
+            <property name="font">
+             <font>
+              <pointsize>9</pointsize>
+             </font>
+            </property>
             <property name="text">
              <string>clear</string>
             </property>
@@ -643,6 +703,11 @@
           </item>
           <item>
            <widget class="QPushButton" name="pushButton_robot_2_send">
+            <property name="font">
+             <font>
+              <pointsize>9</pointsize>
+             </font>
+            </property>
             <property name="text">
              <string>send</string>
             </property>
@@ -650,6 +715,11 @@
           </item>
           <item>
            <widget class="QPushButton" name="pushButton_update_robot2">
+            <property name="font">
+             <font>
+              <pointsize>9</pointsize>
+             </font>
+            </property>
             <property name="text">
              <string>Update</string>
             </property>
@@ -716,6 +786,11 @@
        <height>25</height>
       </rect>
      </property>
+     <property name="font">
+      <font>
+       <pointsize>8</pointsize>
+      </font>
+     </property>
      <property name="text">
       <string>stop</string>
      </property>
@@ -775,6 +850,11 @@
        <height>25</height>
       </rect>
      </property>
+     <property name="font">
+      <font>
+       <pointsize>8</pointsize>
+      </font>
+     </property>
      <property name="text">
       <string>Right -</string>
      </property>
@@ -788,6 +868,11 @@
        <height>25</height>
       </rect>
      </property>
+     <property name="font">
+      <font>
+       <pointsize>8</pointsize>
+      </font>
+     </property>
      <property name="text">
       <string>Front +</string>
      </property>
@@ -800,6 +885,11 @@
        <width>64</width>
        <height>25</height>
       </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>8</pointsize>
+      </font>
      </property>
      <property name="text">
       <string>Back -</string>
@@ -901,6 +991,11 @@
        <height>25</height>
       </rect>
      </property>
+     <property name="font">
+      <font>
+       <pointsize>8</pointsize>
+      </font>
+     </property>
      <property name="text">
       <string>Left +</string>
      </property>
@@ -914,6 +1009,11 @@
        <height>25</height>
       </rect>
      </property>
+     <property name="font">
+      <font>
+       <pointsize>8</pointsize>
+      </font>
+     </property>
      <property name="text">
       <string>stop</string>
      </property>
@@ -926,6 +1026,11 @@
        <width>93</width>
        <height>32</height>
       </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>8</pointsize>
+      </font>
      </property>
      <property name="text">
       <string>Stop Moving</string>
@@ -958,6 +1063,11 @@
        <width>39</width>
        <height>25</height>
       </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>8</pointsize>
+      </font>
      </property>
      <property name="text">
       <string>stop</string>
@@ -1015,6 +1125,11 @@
        <height>25</height>
       </rect>
      </property>
+     <property name="font">
+      <font>
+       <pointsize>8</pointsize>
+      </font>
+     </property>
      <property name="text">
       <string>Right -</string>
      </property>
@@ -1028,6 +1143,11 @@
        <height>25</height>
       </rect>
      </property>
+     <property name="font">
+      <font>
+       <pointsize>8</pointsize>
+      </font>
+     </property>
      <property name="text">
       <string>Front +</string>
      </property>
@@ -1040,6 +1160,11 @@
        <width>64</width>
        <height>25</height>
       </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>8</pointsize>
+      </font>
      </property>
      <property name="text">
       <string>Back -</string>
@@ -1135,6 +1260,11 @@
        <height>25</height>
       </rect>
      </property>
+     <property name="font">
+      <font>
+       <pointsize>8</pointsize>
+      </font>
+     </property>
      <property name="text">
       <string>Left +</string>
      </property>
@@ -1148,6 +1278,11 @@
        <height>25</height>
       </rect>
      </property>
+     <property name="font">
+      <font>
+       <pointsize>8</pointsize>
+      </font>
+     </property>
      <property name="text">
       <string>stop</string>
      </property>
@@ -1160,6 +1295,11 @@
        <width>93</width>
        <height>32</height>
       </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>8</pointsize>
+      </font>
      </property>
      <property name="text">
       <string>Stop Moving</string>
@@ -1307,6 +1447,7 @@
      </property>
      <property name="styleSheet">
       <string notr="true">background-image: url(:/icon/UI/icon/left_rotation.png);
+border-image: url(:/icon/UI/icon/left_rotation.png);
 image: url(:/icon/UI/icon/left_rotation.png);</string>
      </property>
      <property name="text">
@@ -1324,6 +1465,7 @@ image: url(:/icon/UI/icon/left_rotation.png);</string>
      </property>
      <property name="styleSheet">
       <string notr="true">background-image: url(:/icon/UI/icon/flecha_arriba.png);
+border-image: url(:/icon/UI/icon/flecha_arriba.png);
 image: url(:/icon/UI/icon/flecha_arriba.png);</string>
      </property>
      <property name="text">
@@ -1341,6 +1483,7 @@ image: url(:/icon/UI/icon/flecha_arriba.png);</string>
      </property>
      <property name="styleSheet">
       <string notr="true">background-image: url(:/icon/UI/icon/flecha_abajo.png);
+border-image: url(:/icon/UI/icon/flecha_abajo.png);
 image: url(:/icon/UI/icon/flecha_abajo.png);</string>
      </property>
      <property name="text">
@@ -1358,6 +1501,7 @@ image: url(:/icon/UI/icon/flecha_abajo.png);</string>
      </property>
      <property name="styleSheet">
       <string notr="true">background-image: url(:/icon/UI/icon/rigth_rotation.png);
+border-image: url(:/icon/UI/icon/rigth_rotation.png);
 image: url(:/icon/UI/icon/rigth_rotation.png);</string>
      </property>
      <property name="text">
@@ -1495,6 +1639,7 @@ border-image: url(:/icon/UI/icon/left_rotation.png);</string>
      </property>
      <property name="styleSheet">
       <string notr="true">background-image: url(:/icon/UI/icon/flecha_arriba.png);
+border-image: url(:/icon/UI/icon/flecha_arriba.png);
 image: url(:/icon/UI/icon/flecha_arriba.png);</string>
      </property>
      <property name="text">
@@ -1530,7 +1675,8 @@ border-image: url(:/icon/UI/icon/flecha_abajo.png);</string>
      </property>
      <property name="styleSheet">
       <string notr="true">background-image: url(:/icon/UI/icon/rigth_rotation.png);
-image: url(:/icon/UI/icon/rigth_rotation.png);</string>
+image: url(:/icon/UI/icon/rigth_rotation.png);
+border-image: url(:/icon/UI/icon/rigth_rotation.png);</string>
      </property>
      <property name="text">
       <string/>
@@ -1546,8 +1692,19 @@ image: url(:/icon/UI/icon/rigth_rotation.png);</string>
       <height>48</height>
      </rect>
     </property>
+    <property name="font">
+     <font>
+      <pointsize>8</pointsize>
+     </font>
+    </property>
     <property name="text">
      <string>RealTime Camera</string>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>16</width>
+      <height>16</height>
+     </size>
     </property>
    </widget>
   </widget>

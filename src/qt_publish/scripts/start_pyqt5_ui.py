@@ -7,11 +7,16 @@ from qt_material import apply_stylesheet
 
 if __name__ == '__main__':
     extra = {
-        # 'font_size': '6px',
+        'font_size': '12px',
+        'density_scale': '-3',
     }
     import sys
     app = QtWidgets.QApplication(sys.argv)
-    apply_stylesheet(app, theme='dark_teal.xml', extra=extra)
+    # apply_stylesheet(app, theme='dark_teal.xml', extra=extra)
+    apply_stylesheet(app, theme='dark_amber.xml', extra=extra)
+    # apply_stylesheet(app, theme='dark_red.xml', extra=extra)
+    # apply_stylesheet(app, theme='light_teal.xml', extra=extra)
+    
     window = MainWindow_controller()
     window.show()
     sys.exit(app.exec_())
