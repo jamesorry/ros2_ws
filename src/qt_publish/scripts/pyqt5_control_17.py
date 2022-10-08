@@ -100,6 +100,7 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         self.setup_controller()
         self.setup_fix_controller()
         self.setup_camera_window()
+        self.setup_TableWidget()
         self.timer = QTimer()
         self.timer.timeout.connect(self.reflash_thread)  # 這個通過呼叫槽函式來重新整理時間
         self.timer.start(200)  # 每隔一秒重新整理一次，這裡設定為1000ms
@@ -122,19 +123,6 @@ class MainWindow_controller(QtWidgets.QMainWindow):
 
         self.thread_a = QThread()   # 建立 Thread()
         self.thread_a.run = self.ros_main_loop
-        
-        # QTableWidget使用方法(https://www.jb51.net/article/181132.htm)
-        self.ui.tableWidget_robot1.setRowCount(100)
-        self.ui.tableWidget_robot1.setColumnCount(3)
-        self.ui.tableWidget_robot1.setHorizontalHeaderLabels(['姓名','性别','体重(kg)'])
-        # newItem=QTableWidgetItem('张三')
-        # self.ui.tableWidget_robot1.setItem(0,0,newItem)
-        self.ui.tableWidget_robot1.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch) # 设置表格头为伸缩模式 
-        self.ui.tableWidget_robot1.setEditTriggers(QAbstractItemView.NoEditTriggers) # 将表格设置为禁止编辑 
-        self.ui.tableWidget_robot1.setSelectionBehavior(QAbstractItemView.SelectRows) # 表格整行选中 
-        self.ui.tableWidget_robot1.resizeColumnsToContents() # 将行与列的宽度高度与文本内容的宽高相匹配
-        self.ui.tableWidget_robot1.resizeRowsToContents() # 将行与列的宽度高度与文本内容的宽高相匹配
-
 
     def ros_main_loop(self):
         rclpy.init()
@@ -218,11 +206,16 @@ class MainWindow_controller(QtWidgets.QMainWindow):
                         self.yolo_result_robot1["center_dist"][list_num -
                                                                1] = self.distance_mean_robot1
                         self.yolo_result_robot1["position"][list_num - 1] = position
+                        self.insert_tablewidget_robot1(
+                            self.yolo_result_robot1["class_id"][list_num - 1], self.yolo_result_robot1["probability"][list_num - 1], self.yolo_result_robot1["position"][list_num - 1], "robot1")
+                        self.insert_tablewidget_robot2(
+                            self.yolo_result_robot1["class_id"][list_num - 1], self.yolo_result_robot1["probability"][list_num - 1], self.yolo_result_robot1["position"][list_num - 1], "robot1")
+
                     self.check_num_robot1 = 0
                     break
             else:
                 # print("first: " + str(score.center_dist))
-                if score.center_dist < 1.5:
+                if score.center_dist < 1.5 and self.ui.label_target_status_robot1.text() == "Goal Finish":
                     self.yolo_result_robot1["class_id"].append(score.class_id)
                     self.yolo_result_robot1["probability"].append(
                         score.probability)
@@ -231,6 +224,11 @@ class MainWindow_controller(QtWidgets.QMainWindow):
                     position = self.get_another_point(float(self.robot_1_position['x']), -1.0*float(
                         self.robot_1_position['y']), float(self.robot_1_euler_angles['yaw']), score.center_dist)
                     self.yolo_result_robot1["position"].append(position)
+                    list_num = len(self.yolo_result_robot1["class_id"])
+                    self.insert_tablewidget_robot1(
+                        self.yolo_result_robot1["class_id"][list_num - 1], self.yolo_result_robot1["probability"][list_num - 1], self.yolo_result_robot1["position"][list_num - 1], "robot1")
+                    self.insert_tablewidget_robot2(
+                        self.yolo_result_robot1["class_id"][list_num - 1], self.yolo_result_robot1["probability"][list_num - 1], self.yolo_result_robot1["position"][list_num - 1], "robot1")
 
         # print(self.yolo_result_robot1)
         # print("========================End line=======================")
@@ -261,7 +259,7 @@ class MainWindow_controller(QtWidgets.QMainWindow):
                     break
             else:
                 # print("first: " + str(score.center_dist))
-                if score.center_dist < 1.5:
+                if score.center_dist < 1.5 and self.ui.label_target_status_robot2.text() == "Goal Finish":
                     self.yolo_result_robot2["class_id"].append(score.class_id)
                     self.yolo_result_robot2["probability"].append(
                         score.probability)
@@ -270,6 +268,11 @@ class MainWindow_controller(QtWidgets.QMainWindow):
                     position = self.get_another_point(float(self.robot_2_position['x']), -1.0*float(
                         self.robot_2_position['y']), float(self.robot_2_euler_angles['yaw']), score.center_dist)
                     self.yolo_result_robot2["position"].append(position)
+                    list_num = len(self.yolo_result_robot2["class_id"])
+                    self.insert_tablewidget_robot1(
+                        self.yolo_result_robot2["class_id"][list_num - 1], self.yolo_result_robot2["probability"][list_num - 1], self.yolo_result_robot2["position"][list_num - 1], "robot2")
+                    self.insert_tablewidget_robot2(
+                        self.yolo_result_robot2["class_id"][list_num - 1], self.yolo_result_robot2["probability"][list_num - 1], self.yolo_result_robot2["position"][list_num - 1], "robot2")
 
     def loadImage(self, img: SendMapImage):
         """ This function will load the user selected image
@@ -548,8 +551,8 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         y = self.__pixel_cell_to_pose(
             self.mouse_target['robot1'][1], self.map_center_pixel_y)
         theta = float(self.ui.lineEdit_robot1_target_theta.text())
-        if (self.robot_1_position['x']-0.3) <= x and (self.robot_1_position['x']+0.3) >= x:
-            if (self.robot_1_position['y']-0.3) <= y and (self.robot_1_position['y']+0.3) >= y:
+        if (self.robot_1_position['x']-0.5) <= x and (self.robot_1_position['x']+0.5) >= x:
+            if (self.robot_1_position['y']-0.5) <= y and (self.robot_1_position['y']+0.5) >= y:
                 if (self.robot_1_euler_angles['yaw']-4) <= theta and (self.robot_1_euler_angles['yaw']+4) >= theta:
                     self.ui.label_target_status_robot1.setText("Goal Finish")
 
@@ -570,8 +573,8 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         y = self.__pixel_cell_to_pose(
             self.mouse_target['robot2'][1], self.map_center_pixel_y)
         theta = float(self.ui.lineEdit_robot2_target_theta.text())
-        if (self.robot_2_position['x']-0.3) <= x and (self.robot_2_position['x']+0.3) >= x:
-            if (self.robot_2_position['y']-0.3) <= y and (self.robot_2_position['y']+0.3) >= y:
+        if (self.robot_2_position['x']-0.5) <= x and (self.robot_2_position['x']+0.5) >= x:
+            if (self.robot_2_position['y']-0.5) <= y and (self.robot_2_position['y']+0.5) >= y:
                 if (self.robot_2_euler_angles['yaw']-4) <= theta and (self.robot_2_euler_angles['yaw']+4) >= theta:
                     self.ui.label_target_status_robot2.setText("Goal Finish")
 
@@ -579,6 +582,8 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         if self.ui.groupBox_Target_robot1.isChecked():
             x = float(self.ui.lineEdit_robot1_target_x.text())
             y = float(self.ui.lineEdit_robot1_target_y.text())
+            self.mouse_target['robot1'][0] = self.__pose_to_pixel_cell(x, self.map_center_pixel_x)
+            self.mouse_target['robot1'][1] = self.__pose_to_pixel_cell(y, self.map_center_pixel_y)
             theta = (int(self.ui.lineEdit_robot1_target_theta.text()))
             self.ui.lineEdit_robot1_target_theta.setText(str(theta))
             theta = theta - 0
@@ -597,6 +602,8 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         elif self.ui.groupBox_Target_robot2.isChecked():
             x = float(self.ui.lineEdit_robot2_target_x.text())
             y = float(self.ui.lineEdit_robot2_target_y.text())
+            self.mouse_target['robot2'][0] = self.__pose_to_pixel_cell(x, self.map_center_pixel_x)
+            self.mouse_target['robot2'][1] = self.__pose_to_pixel_cell(y, self.map_center_pixel_y)
             theta = (int(self.ui.lineEdit_robot2_target_theta.text()))
             self.ui.lineEdit_robot2_target_theta.setText(str(theta))
             theta = theta - 0
@@ -1346,3 +1353,63 @@ class MainWindow_controller(QtWidgets.QMainWindow):
             if self.sub_yolov5_image_raw_robot1 != None:
                 self.node.destroy_subscription(
                     self.sub_yolov5_image_raw_robot1)
+
+    # ======================================================================================
+    def setup_TableWidget(self):
+        # QTableWidget使用方法(https://www.jb51.net/article/181132.htm)
+        # https://stackoverflow.com/questions/24044421/how-to-add-a-row-in-a-tablewidget-pyqt
+        self.ui.tableWidget_robot1.setColumnCount(4)
+        self.ui.tableWidget_robot1.setHorizontalHeaderLabels(
+            ['ID', 'PR', 'Pos', 'Check'])
+        # self.ui.tableWidget_robot1.horizontalHeader().setSectionResizeMode(
+        #     QHeaderView.Stretch)  # 设置表格头为伸缩模式
+        self.ui.tableWidget_robot1.setEditTriggers(
+            QAbstractItemView.NoEditTriggers)  # 将表格设置为禁止编辑
+        self.ui.tableWidget_robot1.setSelectionBehavior(
+            QAbstractItemView.SelectRows)  # 表格整行选中
+        self.ui.tableWidget_robot1.resizeColumnsToContents()  # 将行与列的宽度高度与文本内容的宽高相匹配
+        self.ui.tableWidget_robot1.resizeRowsToContents()  # 将行与列的宽度高度与文本内容的宽高相匹配
+
+        self.ui.tableWidget_robot2.setColumnCount(4)
+        self.ui.tableWidget_robot2.setHorizontalHeaderLabels(
+            ['ID', 'PR', 'Pos', 'Check'])
+        # self.ui.tableWidget_robot2.horizontalHeader().setSectionResizeMode(
+        #     QHeaderView.Stretch)  # 设置表格头为伸缩模式
+        self.ui.tableWidget_robot2.setEditTriggers(
+            QAbstractItemView.NoEditTriggers)  # 将表格设置为禁止编辑
+        self.ui.tableWidget_robot2.setSelectionBehavior(
+            QAbstractItemView.SelectRows)  # 表格整行选中
+        self.ui.tableWidget_robot2.resizeColumnsToContents()  # 将行与列的宽度高度与文本内容的宽高相匹配
+        self.ui.tableWidget_robot2.resizeRowsToContents()  # 将行与列的宽度高度与文本内容的宽高相匹配
+
+    def insert_tablewidget_robot1(self, class_id, probability, position, check_from):
+        rowPosition = self.ui.tableWidget_robot1.rowCount()
+        self.ui.tableWidget_robot1.insertRow(rowPosition)
+        numcols = self.ui.tableWidget_robot1.columnCount()
+        numrows = self.ui.tableWidget_robot1.rowCount()
+        self.ui.tableWidget_robot1.setRowCount(numrows)
+        self.ui.tableWidget_robot1.setColumnCount(numcols)
+        self.ui.tableWidget_robot1.setItem(
+            numrows-1, 0, QTableWidgetItem(f'{class_id}'))
+        self.ui.tableWidget_robot1.setItem(
+            numrows-1, 1, QTableWidgetItem(f'{probability:.2f}'))
+        self.ui.tableWidget_robot1.setItem(
+            numrows-1, 2, QTableWidgetItem(f'({position[0]:.2f}, {position[1]:.2f})'))
+        self.ui.tableWidget_robot1.setItem(
+            numrows-1, 3, QTableWidgetItem(f'{check_from}'))
+
+    def insert_tablewidget_robot2(self, class_id, probability, position, check_from):
+        rowPosition = self.ui.tableWidget_robot2.rowCount()
+        self.ui.tableWidget_robot2.insertRow(rowPosition)
+        numcols = self.ui.tableWidget_robot2.columnCount()
+        numrows = self.ui.tableWidget_robot2.rowCount()
+        self.ui.tableWidget_robot2.setRowCount(numrows)
+        self.ui.tableWidget_robot2.setColumnCount(numcols)
+        self.ui.tableWidget_robot2.setItem(
+            numrows-1, 0, QTableWidgetItem(f'{class_id}'))
+        self.ui.tableWidget_robot2.setItem(
+            numrows-1, 1, QTableWidgetItem(f'{probability:.2f}'))
+        self.ui.tableWidget_robot2.setItem(
+            numrows-1, 2, QTableWidgetItem(f'({position[0]:.2f}, {position[1]:.2f})'))
+        self.ui.tableWidget_robot2.setItem(
+            numrows-1, 3, QTableWidgetItem(f'{check_from}'))

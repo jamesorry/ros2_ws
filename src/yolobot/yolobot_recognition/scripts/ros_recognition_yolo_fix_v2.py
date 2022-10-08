@@ -64,20 +64,24 @@ class Camera_subscriber(Node):
 
         # Initialize
         set_logging()
+        # 獲取設備返回值（cuda）
         self.device = select_device(device_num)
         self.half &= self.device.type != 'cpu'  # half precision only supported on CUDA
 
         # Load model
+        # 加載float32模型，確保輸入圖片分辨率能整除32(如果不能整除則調整成可以整除並返回)
         self.model = attempt_load(
             weights, map_location=self.device)  # load FP32 model
         stride = int(self.model.stride.max())  # model stride
         imgsz = check_img_size(self.imgsz, s=stride)  # check image size
+        # 獲取類別名字字符串列表
         self.names = self.model.module.names if hasattr(
             self.model, 'module') else self.model.names  # get class names
         if self.half:
             self.model.half()  # to FP16
 
         # Second-stage classifier
+        # 設置第二類分辨，默認是不使用
         self.classify = False
         if self.classify:
             self.modelc = load_classifier(name='resnet50', n=2)  # initialize
@@ -85,10 +89,11 @@ class Camera_subscriber(Node):
                                         'model']).to(self.device).eval()
 
         # Dataloader
-        view_img = check_imshow()
+        view_img = check_imshow() # Check if environment supports image displays
         cudnn.benchmark = True  # set True to speed up constant image size inference
 
         # Run inference
+        # 進行一次向前推理，測試程序是否正常
         if self.device.type != 'cpu':
             self.model(torch.zeros(1, 3, imgsz, imgsz).to(self.device).type_as(
                 next(self.model.parameters())))  # run once
@@ -225,21 +230,27 @@ class Camera_subscriber(Node):
             pred = apply_classifier(pred, self.modelc, img, img0)
 
         # Process detections
+        # 對每張圖進行處理
         for i, det in enumerate(pred):  # detections per image
+            # 設置印出訊息（圖片寬高）
             s = f'{i}: '
             s += '%gx%g ' % img.shape[2:]  # print string
 
             if len(det):
                 # Rescale boxes from img_size to im0 size
+                # 調整預測框座標，基於resize+pad的圖片座標-->基於源size圖片的座標
+                # 此時座標格式為xyxy
                 det[:, :4] = scale_coords(
                     img.shape[2:], det[:, :4], img0.shape).round()
 
                 # Print results
+                # 印出檢測的類別訊息
                 for c in det[:, -1].unique():
                     n = (det[:, -1] == c).sum()  # detections per class
                     # add to string
                     s += f"{n} {self.names[int(c)]}{'s' * (n > 1)}, "
 
+                # 保存預測結果
                 for *xyxy, conf, cls in reversed(det):
                     if float(conf) >= 0.75:
                         c = int(cls)  # integer class

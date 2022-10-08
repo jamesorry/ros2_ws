@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1475</width>
+    <width>1021</width>
     <height>691</height>
    </rect>
   </property>
@@ -19,7 +19,7 @@
      <rect>
       <x>560</x>
       <y>0</y>
-      <width>225</width>
+      <width>227</width>
       <height>40</height>
      </rect>
     </property>
@@ -629,7 +629,7 @@
       <rect>
        <x>9</x>
        <y>40</y>
-       <width>212</width>
+       <width>210</width>
        <height>173</height>
       </rect>
      </property>
@@ -1714,20 +1714,46 @@ border-image: url(:/icon/UI/icon/rigth_rotation.png);</string>
     <property name="geometry">
      <rect>
       <x>565</x>
-      <y>486</y>
-      <width>205</width>
-      <height>172</height>
+      <y>488</y>
+      <width>330</width>
+      <height>68</height>
      </rect>
     </property>
    </widget>
    <widget class="QTableWidget" name="tableWidget_robot2">
     <property name="geometry">
      <rect>
-      <x>800</x>
-      <y>484</y>
-      <width>205</width>
-      <height>172</height>
+      <x>564</x>
+      <y>592</y>
+      <width>331</width>
+      <height>68</height>
      </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_27">
+    <property name="geometry">
+     <rect>
+      <x>566</x>
+      <y>469</y>
+      <width>90</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Robot1_msg</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_28">
+    <property name="geometry">
+     <rect>
+      <x>564</x>
+      <y>574</y>
+      <width>90</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Robot1_msg</string>
     </property>
    </widget>
   </widget>
