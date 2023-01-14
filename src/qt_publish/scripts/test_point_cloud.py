@@ -62,16 +62,17 @@ class TestPointCloud(Node):
         print('X list min value:', min(self.x_list))
         print('Y list max value:', max(self.y_list))
         print('Y list min value:', min(self.y_list))
-        self._z_finial_disrance = statistics.mean(self.z_list)
-        print('Z list mean value(m): ', self._z_finial_disrance) # 最後取平均值 得到z軸的距離
+        if len(self.z_list) != 0:
+            self._z_finial_disrance = statistics.mean(self.z_list)
+            print('Z list mean value(m): ', self._z_finial_disrance) # 最後取平均值 得到z軸的距離
         self._num_count = self._num_count + 1
         print("writing.....", self._num_count)
         plt.plot(self.x_list, self.y_list)
         plt.plot(self.x_list_fix, self.y_list_fix, color='red')
         # plt.gca().invert_xaxis() # x軸逆序显示
         plt.gca().invert_yaxis() # y軸逆序显示
-        # plt.show()Z
-        plt.savefig(self.save_image_path + "_" + self._num_count + '.png')
+        plt.show()
+        # plt.savefig(self.save_image_path + "_" + self._num_count + '.png')
         self.x_list_fix.clear()
         self.y_list_fix.clear()
         self.x_list.clear()

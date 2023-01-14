@@ -52,11 +52,12 @@ def gen_robot_list(number_of_robots):
     #                   'y_pose': 0.5, 'z_pose': 0.01})
     #     robots.append({'name': "robot2", 'x_pose': 0.0,
     #                   'y_pose': -0.5, 'z_pose': 0.01})
+    # 修改啟動時座標的設定方式
     if number_of_robots is 1:
-        robots.append({'name': "robot1", 'x_pose': 0.0,
-                      'y_pose': 1.0, 'z_pose': 0.01})
+        robots.append({'name': "robot1", 'x_pose': -4.0,
+                      'y_pose': -5.0, 'z_pose': 0.01})
     elif number_of_robots is 2:  # this  is for position my_own_world_only.model
-        robots.append({'name': "robot1", 'x_pose': 0.0,
+        robots.append({'name': "robot1", 'x_pose': -2.0,
                       'y_pose': 1.0, 'z_pose': 0.01})
         robots.append({'name': "robot2", 'x_pose': 0.0,
                       'y_pose': -1.5, 'z_pose': 0.01})
@@ -69,7 +70,7 @@ def generate_launch_description():
     bringup_dir = get_package_share_directory('my_bringup')
     launch_dir = os.path.join(bringup_dir, 'launch')
 
-    robots = gen_robot_list(2)
+    robots = gen_robot_list(1)
 
     # Simulation settings
     world = LaunchConfiguration('world')
@@ -273,11 +274,22 @@ def generate_launch_description():
             ]
         )
         nav_instances_cmds.append(group)
-
+    
+    init_pose_array = []
+    robot_num = 0
+    for robot in robots:
+        robot_num = robot_num + 1
+        init_pose_array.append(robot['x_pose'])
+        init_pose_array.append(robot['y_pose'])
+    
     initialPose_cmd = Node(
         # condition=IfCondition(PythonExpression(["not ", slam, " and not ", slam_gmapping])),
         package='my_bringup',
-        executable='initialPose.py',
+        executable='initialPose_v3.py',
+        parameters=[
+            {'robot_num': robot_num},
+            {'init_pose_array': init_pose_array},
+        ],
         name='creat_initialPose',
         output='screen'
     )

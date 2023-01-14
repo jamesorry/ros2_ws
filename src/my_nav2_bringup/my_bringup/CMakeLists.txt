@@ -165,6 +165,7 @@ install(DIRECTORY models DESTINATION share/${PROJECT_NAME})
 install(
   PROGRAMS
   src/initialPose.py
+  src/initialPose_v3.py
   src/getRobotPose.py
   src/movement_detector.py
   DESTINATION lib/${PROJECT_NAME}
