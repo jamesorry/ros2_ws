@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import argparse
 from control_pid import PID
 from datetime import datetime
 import math
@@ -33,7 +34,7 @@ from geometry_msgs.msg import Twist
 import matplotlib
 import matplotlib.pyplot as plt
 matplotlib.use('TkAgg')
-# 2023/1/15 修改
+# 2023/1/24 修改
 
 FILE = Path(__file__).absolute()
 sys.path.append(FILE.parents[0].as_posix())
@@ -46,7 +47,7 @@ class Camera_subscriber(Node):
 
     def __init__(self):
         super().__init__('camera_subscriber')
-
+        self.Need_Take_Picture = True
         # model.pt path(s) # 事先训练完成的权重文件，比如yolov5s.pt(官方事先訓練好的文件)
         # weights = 'yolov5s.pt'
         weights = 'best.pt'
@@ -163,10 +164,34 @@ class Camera_subscriber(Node):
         # 目標量[畫面中心點（X）, 物體距離(m)]
         self.pid.SetPoint = [float(self.imgsz/2), 1.0]
         self.pid.setSampleTime(0.01)
-        self.control_PID_loop_timer_ = self.create_timer(
-            0.01, self.control_PID_loop)
         self._publisher_twist_robot1 = self.create_publisher(
             Twist, "/robot1/cmd_vel", 10)
+        if not self.Need_Take_Picture:
+            self.control_PID_loop_timer_ = self.create_timer(
+                0.01, self.control_PID_loop)
+        # ================================================================
+        self.Video_Path = Path().absolute() / 'videos'
+        fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')          # 設定影片的格式為 MJPG
+        self.video_count = self.get_files_num(self.Video_Path)
+        self.video_nume = str(self.video_count) + '.mp4'
+        self.videoWriter = cv2.VideoWriter(str(self.Video_Path / self.video_nume), fourcc, 5.0,
+                                           (640,  480))  # 產生空的影片
+
+        self.stop_video_capture = False
+        if self.stop_video_capture:
+            print("開始錄影")
+        else:
+            print("停止錄影")
+            
+        self.start_time = time.time()
+        # FPS update time in seconds
+        self.display_time = 2
+        self.fc = 0
+        self.FPS = 0
+
+        self.Image_Path = Path().absolute() / 'images'
+        self.image_count = self.get_files_num(self.Image_Path)
+        print("image_count nums: ", self.image_count)
         # ================================================================
 
     def x_linear_map(self, x, in_min, in_max, out_min, out_max):
@@ -304,6 +329,17 @@ class Camera_subscriber(Node):
         y_max_list = []
 
         t0 = time.time()
+
+        self.fc = self.fc + 1
+        self.TIME = time.time() - self.start_time
+
+        if (self.TIME) >= self.display_time:
+            self.FPS = self.fc / (self.TIME)
+            self.fc = 0
+            self.start_time = time.time()
+            fps_disp = "FPS: "+str(self.FPS)[:5]
+            # print(fps_disp) #印出目前影像的fps
+
         img = bridge.imgmsg_to_cv2(data, "bgr8")
         # img = bridge.imgmsg_to_cv2(data, "32FC1")
 
@@ -390,53 +426,75 @@ class Camera_subscriber(Node):
                     n = (det[:, -1] == c).sum()  # detections per class
                     # add to string
                     s += f"{n} {self.names[int(c)]}{'s' * (n > 1)}, "
+                if not self.Need_Take_Picture:
+                    # 保存預測結果
+                    for *xyxy, conf, cls in reversed(det):
+                        if float(conf) >= 0.75:
+                            c = int(cls)  # integer class
+                            label = None if self.hide_labels else (
+                                self.names[c] if self.hide_conf else f'{self.names[c]} {conf:.2f}')
+                            plot_one_box(xyxy, img0, label=label, color=colors(
+                                c, True), line_thickness=self.line_thickness)
 
-                # 保存預測結果
-                for *xyxy, conf, cls in reversed(det):
-                    if float(conf) >= 0.75:
-                        c = int(cls)  # integer class
-                        label = None if self.hide_labels else (
-                            self.names[c] if self.hide_conf else f'{self.names[c]} {conf:.2f}')
-                        plot_one_box(xyxy, img0, label=label, color=colors(
-                            c, True), line_thickness=self.line_thickness)
-
-                        self.class_list.append(self.names[c])
-                        confidence_list.append(conf)
-                        # tensor to float
-                        x_min_list.append(xyxy[0].item())
-                        y_min_list.append(xyxy[1].item())
-                        x_max_list.append(xyxy[2].item())
-                        y_max_list.append(xyxy[3].item())
-                        xmin = (xyxy[0].item())
-                        ymin = (xyxy[1].item())
-                        xmax = (xyxy[2].item())
-                        ymax = (xyxy[3].item())
-                        x_center = int(abs((xmax-xmin)/2) + xmin)
-                        y_center = int(abs((ymax-ymin)/2) + ymin)
-                        self.target_center_pixel = (x_center, y_center)
-                        # print("x_center: ", x_center, "; y_center: ", y_center)
-                        # print("integer class: ", c, "; lable: ", label)
-                        cv2.circle(img0, (x_center, y_center),
-                                   1, (0, 0, 255), 3)
-                        pointcloud_num = self.imgsz * y_center + x_center
-                        if self.update_pointcloud is True:
-                            cv2.putText(img0, "(depth: {:.3f})".format(self.z_list_copy[pointcloud_num]), (int(
-                                x_center - 40), int(y_center + 10)), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 1)
+                            self.class_list.append(self.names[c])
+                            confidence_list.append(conf)
+                            # tensor to float
+                            x_min_list.append(xyxy[0].item())
+                            y_min_list.append(xyxy[1].item())
+                            x_max_list.append(xyxy[2].item())
+                            y_max_list.append(xyxy[3].item())
+                            xmin = (xyxy[0].item())
+                            ymin = (xyxy[1].item())
+                            xmax = (xyxy[2].item())
+                            ymax = (xyxy[3].item())
+                            x_center = int(abs((xmax-xmin)/2) + xmin)
+                            y_center = int(abs((ymax-ymin)/2) + ymin)
+                            self.target_center_pixel = (x_center, y_center)
+                            # print("x_center: ", x_center, "; y_center: ", y_center)
+                            # print("integer class: ", c, "; lable: ", label)
+                            cv2.circle(img0, (x_center, y_center),
+                                       1, (0, 0, 255), 3)
+                            pointcloud_num = self.imgsz * y_center + x_center
+                            if self.update_pointcloud is True:
+                                cv2.putText(img0, "(depth: {:.3f})".format(self.z_list_copy[pointcloud_num]), (int(
+                                    x_center - 40), int(y_center + 10)), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 1)
         self.update_camera = True
-        # cv2.line(img0, (310, 0), (310, 480), (255, 0, 0), 1)
-        # cv2.line(img0, (330, 0), (330, 480), (255, 0, 0), 1)
         cv2.imshow("IMAGE", img0)
         if self.update_pointcloud is True:
             self.update_pointcloud = False
-        if len(self.class_list):
+        if len(self.class_list) and not self.Need_Take_Picture:
             renamed_list = self.rename_duplicate(self.class_list)
             self.yolovFive2bboxes_msgs(bboxes=[x_min_list, y_min_list, x_max_list, y_max_list],
                                        scores=confidence_list, cls=renamed_list, img_header=data.header)
+            self.publish_image.publish(bridge.cv2_to_imgmsg(img0, "bgr8"))
+        if self.stop_video_capture:
+            self.videoWriter.write(img0)       # 將取得的每一幀圖像寫入空的影片
 
-        self.publish_image.publish(bridge.cv2_to_imgmsg(img0, "bgr8"))
-
-        cv2.waitKey(1)
+        key = cv2.waitKey(1)
+        if key == ord('q'):
+            '''
+            self.image_count = self.image_count + 1
+            Img_File_Name = str(self.image_count) + '.jpg'
+            cv2.imwrite(str(self.Image_Path / Img_File_Name), img0)
+            print("SAVE PIC: ", str(self.Image_Path / Img_File_Name))
+            '''
+            self.videoWriter.release()
+            print("結束錄影")
+            print("SAVE VIDEO: ", self.Video_Path / self.video_nume)
+        elif key == ord('s'):
+            if self.stop_video_capture:
+                print("停止錄影")
+            else:
+                print("開始錄影")
+            self.stop_video_capture = not self.stop_video_capture
         # https://cloud.tencent.com/developer/article/1456305 (PID控制算法)
+
+    def get_files_num(self, dir_path):
+        count = 0
+        for path in Path(dir_path).iterdir():
+            if path.is_file():
+                count += 1
+        return count
 
     def rename_duplicate(self, list):
         counts = {}
