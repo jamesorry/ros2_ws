@@ -34,7 +34,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 matplotlib.use('TkAgg')
 # 2023/1/15 修改
-
+# PID控制跟隨物體移動
 FILE = Path(__file__).absolute()
 sys.path.append(FILE.parents[0].as_posix())
 
