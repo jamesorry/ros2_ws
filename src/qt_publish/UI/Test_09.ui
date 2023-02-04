@@ -629,7 +629,7 @@
       <rect>
        <x>9</x>
        <y>40</y>
-       <width>214</width>
+       <width>213</width>
        <height>173</height>
       </rect>
      </property>
@@ -1754,6 +1754,30 @@ border-image: url(:/icon/UI/icon/rigth_rotation.png);</string>
     </property>
     <property name="text">
      <string>Robot1_msg</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_start_yolov5">
+    <property name="geometry">
+     <rect>
+      <x>1053</x>
+      <y>565</y>
+      <width>140</width>
+      <height>48</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>8</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Start YOLOV5</string>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>16</width>
+      <height>16</height>
+     </size>
     </property>
    </widget>
   </widget>

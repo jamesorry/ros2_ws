@@ -69,11 +69,15 @@ class Camera_subscriber(Node):
         print('unknown', unknown)
         print("take_picture: ", args.take_picture)
         print("PID_Control: ", args.PID_Control)
+        print(Path().absolute())
+        print(FILE)
+        print(FILE.parents[0])
         self.Need_Take_Picture = args.take_picture
         self.Need_PID_Control = args.PID_Control
         # model.pt path(s) # 事先训练完成的权重文件，比如yolov5s.pt(官方事先訓練好的文件)
         # weights = 'yolov5s.pt'
-        weights = args.pt_file
+        # weights = args.pt_file
+        weights = FILE.parents[0] / 'best.pt'
         # inference size (pixels) # 预测时的放缩后图片大小(因为YOLO算法需要预先放缩图片), 两个值分别是height, width
         self.imgsz = 640
         self.conf_thres = 0.25  # confidence threshold # 置信度阈值, 高于此值的bounding_box才会被保留
@@ -148,13 +152,14 @@ class Camera_subscriber(Node):
         print("__bbox_topic_name: ", __bbox_topic_name)
         self.publish_bbox = self.create_publisher(
             BoundingBoxes, __bbox_topic_name, 10)
-        
+
         __image_topic_name = "/" + args.robot_name + "/yolov5/image_raw"
         print("__image_topic_name: ", __image_topic_name)
         self.publish_image = self.create_publisher(
             Image, __image_topic_name, 10)
 
-        __image_raw_topic_name = "/" + args.robot_name + "/intel_realsense_r200_depth/image_raw"
+        __image_raw_topic_name = "/" + args.robot_name + \
+            "/intel_realsense_r200_depth/image_raw"
         print("__image_raw_topic_name: ", __image_raw_topic_name)
         self.image_raw_subscription = self.create_subscription(
             Image,
@@ -168,14 +173,15 @@ class Camera_subscriber(Node):
         self.class_list = []
         # for point_cloud
         self._num_count = 0
-        self._z_finial_disrance = 0.0
+        # self._z_finial_disrance = 0.0
         self.x_list = []
         self.y_list = []
         self.z_list = []
         self.x_list_copy = []
         self.y_list_copy = []
         self.z_list_copy = []
-        __PointCloud2_topic_name = "/" + args.robot_name + "/intel_realsense_r200_depth/points"
+        __PointCloud2_topic_name = "/" + args.robot_name + \
+            "/intel_realsense_r200_depth/points"
         print("__PointCloud2_topic_name: ", __PointCloud2_topic_name)
         self.PointCloud2_subscriber_ = self.create_subscription(
             PointCloud2, __PointCloud2_topic_name, self.callback_pointcloud_XY_Plot, 10)
@@ -210,7 +216,9 @@ class Camera_subscriber(Node):
         self.fc = 0
         self.FPS = 0
 
-        self.Image_Path = Path().absolute() / 'images'
+        # self.Image_Path = Path().absolute() / 'images'
+        # 改成這種路徑 不然從別的python程式中呼叫，會有繼承的路徑問題
+        self.Image_Path = FILE.parents[0] / 'images'
         self.image_count = self.get_files_num(self.Image_Path)
         print("image_count nums: ", self.image_count)
         # ================================================================
@@ -322,20 +330,27 @@ class Camera_subscriber(Node):
             one_box.ymin = int(bboxes[1][i])
             one_box.xmax = int(bboxes[2][i])
             one_box.ymax = int(bboxes[3][i])
-            one_box.x_center = abs(
-                one_box.xmax - one_box.xmin) / 2 + one_box.xmin
-            one_box.y_center = abs(
-                one_box.ymax - one_box.ymin) / 2 + one_box.ymin
+            one_box.x_center = (abs(
+                one_box.xmax - one_box.xmin) / 2 + one_box.xmin)
+            one_box.y_center = (abs(
+                one_box.ymax - one_box.ymin) / 2 + one_box.ymin)
             one_box.probability = float(score)
             one_box.class_id = cls[i]
-            one_box.center_dist = self._z_finial_disrance
+            one_box.center_dist = 0.0
+
+            pointcloud_num = int(self.imgsz * one_box.y_center + one_box.x_center)
+            if self.update_pointcloud is True:
+                # float()
+                one_box.center_dist = self.z_list_copy[pointcloud_num]
+
             # print(f"xmin: {one_box.xmin}, ymin: {one_box.ymin}")
             # print(f"xmax: {one_box.xmax}, ymax: {one_box.ymax}")
             # print(f"x_center: {one_box.x_center}, y_center: {one_box.y_center}")
-            if (one_box.x_center >= 250 and one_box.x_center <= 390):
-                bboxes_msg.bounding_boxes.append(one_box)
-                i = i+1
-                # print(i)
+
+            # if (one_box.x_center >= 250 and one_box.x_center <= 390):
+            bboxes_msg.bounding_boxes.append(one_box)
+            i = i+1
+            # print(i)
         self.publish_bbox.publish(bboxes_msg)
 
     def camera_callback(self, data: Image):
@@ -478,14 +493,13 @@ class Camera_subscriber(Node):
                                     x_center - 40), int(y_center + 10)), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 1)
 
         cv2.imshow("IMAGE", img0)
-        if self.update_pointcloud is True:
-            self.update_pointcloud = False
         if len(self.class_list) and not self.Need_Take_Picture:
             renamed_list = self.rename_duplicate(self.class_list)
             self.yolovFive2bboxes_msgs(bboxes=[x_min_list, y_min_list, x_max_list, y_max_list],
                                        scores=confidence_list, cls=renamed_list, img_header=data.header)
             self.publish_image.publish(bridge.cv2_to_imgmsg(img0, "bgr8"))
-
+        if self.update_pointcloud is True:
+            self.update_pointcloud = False
         key = cv2.waitKey(1)
         if key == ord('s'):
             if self.Need_Take_Picture:
@@ -493,7 +507,8 @@ class Camera_subscriber(Node):
                 Img_File_Name = str(self.image_count) + '.jpg'
                 cv2.imwrite(str(self.Image_Path / Img_File_Name), img0)
                 print("SAVE PIC: ", str(self.Image_Path / Img_File_Name))
-
+            elif key == ord('q'):
+                cv2.destroyAllWindows()
             # Python执行外部命令
             # 若是執行外部檔案，需要先給chmod權限才可被執行
             # subprocess.call("/home/james/Documents/justforfun.py --help", shell=True)

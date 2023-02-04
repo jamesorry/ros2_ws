@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding:UTF-8 -*-
+import os
 from gc import isenabled
 import math
 from datetime import datetime
@@ -28,7 +29,7 @@ from PyQt5.QtGui import *
 #     QWidget,
 # )
 import cv2
-from Test_08 import Ui_MainWindow
+from Test_09 import Ui_MainWindow
 from camera_window_01 import Ui_CameraWindow
 from nav_msgs.msg import Odometry, OccupancyGrid
 from geometry_msgs.msg import Quaternion, PoseStamped
@@ -45,6 +46,8 @@ from sensor_msgs.msg import Image
 import pyqtgraph.opengl as gl
 
 from action_msgs.msg import GoalStatus
+# import subprocess
+import multiprocessing
 
 bridge = CvBridge()
 
@@ -106,10 +109,10 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         self.setup_camera_window()
         self.setup_TableWidget()
         # self.init_pyqtgraph()
-        self.timer = QTimer()
+        self.timer = QTimer(self)
         self.timer.timeout.connect(self.reflash_thread)  # 這個通過呼叫槽函式來重新整理時間
         self.timer.start(200)  # 每隔一秒重新整理一次，這裡設定為1000ms
-
+        self.indexes = None
         # https://github.com/ros-visualization/rqt_robot_steering/blob/master/src/rqt_robot_steering/robot_steering.py
         # timer to consecutively send twist messages
         self._update_parameter_timer = QTimer(self)
@@ -135,6 +138,18 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         self.ui.label_28.setVisible(False)
         self.ui.tableWidget_robot1.setVisible(True)
         self.ui.tableWidget_robot2.setVisible(True)
+        self.ui.pushButton_start_yolov5.clicked.connect(
+            self.__Start_YoloV5
+        )
+
+    def __Start_YoloV5(self):
+        self.process_yolo = multiprocessing.Process(target=os.system(
+            "/home/james/ros2_ws/src/yolobot/yolobot_recognition/scripts/ros_recognition_yolo_fix_v8.py"))
+        if(not self.process_yolo.is_alive()):
+            self.process_yolo.start()
+            self.process_yolo.join()
+        # subprocess.run(
+        #     "/home/james/ros2_ws/src/yolobot/yolobot_recognition/scripts/ros_recognition_yolo_fix_v8.py", shell=True)
 
     def ros_main_loop(self):
         rclpy.init()
@@ -203,6 +218,28 @@ class MainWindow_controller(QtWidgets.QMainWindow):
             # print(f"probability: {score.probability}")
             # print(f"center_dist: {score.center_dist}")
             if score.class_id in self.yolo_result_robot1["class_id"]:
+                # self.yolo_result_robot1["class_id"].append(score.class_id)
+                list_num = self.yolo_result_robot1["class_id"].index(
+                    score.class_id)
+                self.yolo_result_robot1["probability"][list_num] = score.probability
+                self.yolo_result_robot1["center_dist"][list_num] = score.center_dist
+                position = self.get_another_point(float(self.robot_1_position['x']), -1.0*float(
+                    self.robot_1_position['y']), float(self.robot_1_euler_angles['yaw']), score.center_dist)
+                self.yolo_result_robot1["position"][list_num] = position
+                # list_num = len(self.yolo_result_robot1["class_id"])
+
+                self.update_tablewidget_robot1(
+                    self.yolo_result_robot1["class_id"][list_num],
+                    self.yolo_result_robot1["probability"][list_num],
+                    self.yolo_result_robot1["position"][list_num],
+                    "robot1", list_num)
+                self.update_tablewidget_robot2(
+                    self.yolo_result_robot1["class_id"][list_num],
+                    self.yolo_result_robot1["probability"][list_num],
+                    self.yolo_result_robot1["position"][list_num],
+                    "robot1", list_num)
+
+                """ 
                 self.check_num_robot1 = self.check_num_robot1 + 1
                 self.distance_mean_robot1 = self.distance_mean_robot1 + score.center_dist
                 if self.check_num_robot1 > 10:
@@ -225,6 +262,7 @@ class MainWindow_controller(QtWidgets.QMainWindow):
 
                     self.check_num_robot1 = 0
                     break
+                 """
             else:
                 # print("first: " + str(score.center_dist))
                 if True:  # score.center_dist < 1.5 and self.ui.label_target_status_robot1.text() == "Goal Finish":
@@ -314,6 +352,11 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         current_time = datetime.now().strftime("%I:%M:%S %p")
         # self.ui.label_Date.setText(current_date)
         self.ui.label_Time.setText(current_time)
+
+        # 印出選中的行數
+        if(self.indexes != self.ui.tableWidget_robot1.currentRow()):
+            self.indexes = self.ui.tableWidget_robot1.currentRow()
+            print("self.indexes: ", self.indexes)
         if self.setup_status is True:
             self.pose_to_pixel_map()
 
@@ -371,7 +414,7 @@ class MainWindow_controller(QtWidgets.QMainWindow):
                    color=(0, 97, 0), thickness=2)
 
         for pos in self.yolo_result_robot1["position"]:
-            # print(pos)
+            # print("pos: ", pos)
             another_center_x = self.__pose_to_pixel_cell(
                 float(pos[0]), self.map_center_pixel_x)
             another_center_y = self.__pose_to_pixel_cell(
@@ -822,6 +865,7 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         self.ui.pushButton_zoom_out.setEnabled(False)
         self.ui.Slider_ImageSizeArea.setEnabled(False)
         self.ui.pushButton_show_camera_window.setEnabled(False)
+        # self.ui.pushButton_start_yolov5.setEnabled(False)
 
     def enabled_ui(self):
         self.ui.groupBox_robot_1.setEnabled(True)
@@ -837,6 +881,7 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         self.ui.pushButton_zoom_out.setEnabled(True)
         self.ui.Slider_ImageSizeArea.setEnabled(True)
         self.ui.pushButton_show_camera_window.setEnabled(True)
+        # self.ui.pushButton_start_yolov5.setEnabled(True)
     # ========================================================================================
 
     def init_map_img(self, img):
@@ -1480,6 +1525,13 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         self.ui.tableWidget_robot2.resizeColumnsToContents()  # 将行与列的宽度高度与文本内容的宽高相匹配
         self.ui.tableWidget_robot2.resizeRowsToContents()  # 将行与列的宽度高度与文本内容的宽高相匹配
 
+    def update_tablewidget_robot1(self, class_id, probability, position, check_from, row):
+        self.ui.tableWidget_robot1.item(row, 0).setText(f'{class_id}')
+        self.ui.tableWidget_robot1.item(row, 1).setText(f'{probability:.2f}')
+        self.ui.tableWidget_robot1.item(row, 2).setText(
+            f'({position[0]:.2f}, {position[1]:.2f})')
+        self.ui.tableWidget_robot1.item(row, 3).setText(f'{check_from}')
+
     def insert_tablewidget_robot1(self, class_id, probability, position, check_from):
         rowPosition = self.ui.tableWidget_robot1.rowCount()
         self.ui.tableWidget_robot1.insertRow(rowPosition)
@@ -1487,14 +1539,23 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         numrows = self.ui.tableWidget_robot1.rowCount()
         self.ui.tableWidget_robot1.setRowCount(numrows)
         self.ui.tableWidget_robot1.setColumnCount(numcols)
+        probability = "{:.2f}".format(float(probability))
+        print("probability: ", probability)
         self.ui.tableWidget_robot1.setItem(
             numrows-1, 0, QTableWidgetItem(f'{class_id}'))
         self.ui.tableWidget_robot1.setItem(
-            numrows-1, 1, QTableWidgetItem(f'{probability:.2f}'))
+            numrows-1, 1, QTableWidgetItem(probability))
         self.ui.tableWidget_robot1.setItem(
             numrows-1, 2, QTableWidgetItem(f'({position[0]:.2f}, {position[1]:.2f})'))
         self.ui.tableWidget_robot1.setItem(
             numrows-1, 3, QTableWidgetItem(f'{check_from}'))
+
+    def update_tablewidget_robot2(self, class_id, probability, position, check_from, row):
+        self.ui.tableWidget_robot2.item(row, 0).setText(f'{class_id}')
+        self.ui.tableWidget_robot2.item(row, 1).setText(f'{probability:.2f}')
+        self.ui.tableWidget_robot2.item(row, 2).setText(
+            f'({position[0]:.2f}, {position[1]:.2f})')
+        self.ui.tableWidget_robot2.item(row, 3).setText(f'{check_from}')
 
     def insert_tablewidget_robot2(self, class_id, probability, position, check_from):
         rowPosition = self.ui.tableWidget_robot2.rowCount()
