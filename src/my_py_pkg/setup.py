@@ -34,7 +34,9 @@ setup(
             "turn_camera_server = my_py_pkg.turn_camera_server:main",
             "turn_camera_client = my_py_pkg.turn_camera_client:main",
             "action_client = my_py_pkg.action_client:main",
-            "action_server = my_py_pkg.action_server:main"
+            "action_server = my_py_pkg.action_server:main",
+            "fibonacci_action_client = my_py_pkg.fibonacci_action_client:main",
+            "fibonacci_action_server = my_py_pkg.fibonacci_action_server:main",
         ],
     },
 )

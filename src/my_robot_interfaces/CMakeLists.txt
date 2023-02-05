@@ -32,6 +32,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/CatchTurtle.srv"
   "srv/TurnCamera.srv"
   "action/Navigate2D.action"
+  "action/Fibonacci.action"
+  "action/ObjectTrack.action"
   DEPENDENCIES sensor_msgs geometry_msgs
 )
 
