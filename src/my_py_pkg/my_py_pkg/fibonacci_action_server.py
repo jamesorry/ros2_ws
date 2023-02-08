@@ -33,7 +33,7 @@ class FibonacciActionServer(Node):
 
     def goal_callback(self, goal_request):
         """Accept or reject a client request to begin an action."""
-        self.get_logger().info('Received goal request')
+        self.get_logger().info('Received goal request: {0}'.format(goal_request))
         return GoalResponse.ACCEPT
 
     def handle_accepted_callback(self, goal_handle):
@@ -55,6 +55,7 @@ class FibonacciActionServer(Node):
     def execute_callback(self, goal_handle):
         """Execute the goal."""
         self.get_logger().info('Executing goal...')
+        print(goal_handle)
 
         # Append the seeds for the Fibonacci sequence
         feedback_msg = Fibonacci.Feedback()

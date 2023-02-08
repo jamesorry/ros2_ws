@@ -70,7 +70,7 @@ def generate_launch_description():
     bringup_dir = get_package_share_directory('my_bringup')
     launch_dir = os.path.join(bringup_dir, 'launch')
 
-    robots = gen_robot_list(2)
+    robots = gen_robot_list(1)
 
     # Simulation settings
     world = LaunchConfiguration('world')

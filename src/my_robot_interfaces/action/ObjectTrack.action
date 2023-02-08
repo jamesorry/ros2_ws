@@ -2,11 +2,10 @@
 string object_name
 ---
 # Result
-float32 elapsed_time
 bool success
 ---
 # Feedback
-float32 distance_to_point
+float32 elapsed_time
 int32 status
 # status = 0 is object missing
 # status = 1 is object tracking

@@ -169,6 +169,8 @@ install(
   src/initialPose_v3.py
   src/getRobotPose.py
   src/movement_detector.py
+  src/track_action_client.py
+  src/track_action_server.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
