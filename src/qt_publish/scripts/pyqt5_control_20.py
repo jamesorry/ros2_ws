@@ -38,6 +38,7 @@ from pyqt_led import Led
 
 from rclpy.action import ActionClient
 from nav2_msgs.action import NavigateToPose
+from my_robot_interfaces.action import ObjectTrack
 from builtin_interfaces.msg import Duration
 from geometry_msgs.msg import Twist
 # TODO: PYQT5 界面可以與ros2 topic 建立關係
@@ -48,8 +49,17 @@ import pyqtgraph.opengl as gl
 from action_msgs.msg import GoalStatus
 # import subprocess
 import multiprocessing
+from enum import Enum
 
 bridge = CvBridge()
+
+
+class FollowStatusMSG(Enum):
+    NONE = ""
+    CANCEL = 'Cancel'
+    CANCEL_ERROR = 'Cancel Error'
+    FOLLOWING = 'Following'
+    MISSING = 'Missing'
 
 
 def quaternion_to_euler_angles(x, y, z, w):
@@ -185,12 +195,15 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         self._action_client_robot2 = ActionClient(
             self.node, NavigateToPose, "/robot2/navigate_to_pose")
 
+        self._action_client_follow = ActionClient(
+            self.node, ObjectTrack, "/robot1/object_track")
+
         self.sub_bounding_boxes_robot1 = self.node.create_subscription(
-            BoundingBoxes, '/robot1/yolov5/bounding_boxes', self.get_robot1_distance, 10)
+            BoundingBoxesV2, '/robot1/yolov5/bounding_boxes', self.get_robot1_distance, 10)
         self.sub_bounding_boxes_robot1
 
         self.sub_bounding_boxes_robot2 = self.node.create_subscription(
-            BoundingBoxes, '/robot2/yolov5/bounding_boxes', self.get_robot2_distance, 10)
+            BoundingBoxesV2, '/robot2/yolov5/bounding_boxes', self.get_robot2_distance, 10)
         self.sub_bounding_boxes_robot2
 
         self.yolo_result_robot1 = {"class_id": [],
@@ -211,7 +224,7 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         print("start ros2 UI.... OK!!!!")
         rclpy.spin(self.node)
 
-    def get_robot1_distance(self, data: BoundingBoxes):
+    def get_robot1_distance(self, data: BoundingBoxesV2):
         for score in data.bounding_boxes:
             # print(score)
             # print(f"class_id: {score.class_id}")
@@ -283,7 +296,7 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         # print(self.yolo_result_robot1)
         # print("========================End line=======================")
 
-    def get_robot2_distance(self, data: BoundingBoxes):
+    def get_robot2_distance(self, data: BoundingBoxesV2):
         for score in data.bounding_boxes:
             # print(score)
             # print(f"class_id: {score.class_id}")
@@ -354,11 +367,12 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         self.ui.label_Time.setText(current_time)
 
         # 印出選中的行數
-        if(self.indexes != self.ui.tableWidget_robot1.currentRow()):
-            self.indexes = self.ui.tableWidget_robot1.currentRow()
-            print("self.indexes: ", self.indexes)
+        # if(self.indexes != self.ui.tableWidget_robot1.currentRow()):
+        #     self.indexes = self.ui.tableWidget_robot1.currentRow()
+        #     print("self.indexes: ", self.indexes)
         if self.setup_status is True:
             self.pose_to_pixel_map()
+        self.ui.label_follow_status.setText(self.follow_status_msg.value)
 
     def __pose_to_pixel_cell(self, position, center_pixel):
         # pose.x / resolution + center_point = cell_x
@@ -419,10 +433,11 @@ class MainWindow_controller(QtWidgets.QMainWindow):
                 float(pos[0]), self.map_center_pixel_x)
             another_center_y = self.__pose_to_pixel_cell(
                 -1.0*float(pos[1]), self.map_center_pixel_y)
-            another_center_point = (int(another_center_x*1.0),
-                                    int(another_center_y*(1.0)))
-            cv2.drawMarker(map, another_center_point,
-                           (0, 0, 199), markerType=2, markerSize=5)
+            if not math.isinf(another_center_x) and not math.isinf(another_center_y):
+                another_center_point = (int(another_center_x*1.0),
+                                        int(another_center_y*(1.0)))
+                cv2.drawMarker(map, another_center_point,
+                            (0, 0, 199), markerType=2, markerSize=5)
 
         # cv2.arrowedLine(输入图像，起始点(x,y)，结束点(x,y)，线段颜色，线段厚度，线段样式，位移因数，箭头因数)
 
@@ -740,6 +755,94 @@ class MainWindow_controller(QtWidgets.QMainWindow):
                 result, feedback_callback=self.feedback_callback)
             self._send_goal_future_robot2.add_done_callback(
                 self.goal_response_robot2_callback)
+    # ===========================================================
+    # follow controller
+
+    def follow_controller_update(self):
+        choose_index = self.ui.tableWidget_robot1.currentRow()
+        print("choose_index: ", choose_index)
+        self.follow_target_name = self.ui.tableWidget_robot1.item(
+            choose_index, 0).text()
+        print("target_name: ", self.follow_target_name)
+        self.ui.label_follow_object_target.setText(self.follow_target_name)
+        self.ui.pushButton_follow_start.setEnabled(True)
+
+    def follow_controller_cancel(self):
+        self.node.get_logger().info('Canceling follow goal')
+        self.follow_status_msg = FollowStatusMSG.CANCEL
+        self.follow_trigger = False
+        self.ui.pushButton_follow_cancel.setEnabled(False)
+        self.ui.pushButton_follow_start.setEnabled(False)
+        # Cancel the goal
+        future = self._follow_goal_handle.cancel_goal_async()
+        future.add_done_callback(self.follow_cancel_done)
+
+    def follow_cancel_done(self, future):
+        cancel_response = future.result()
+        print("cancel_response: ", cancel_response)
+        if len(cancel_response.goals_canceling) > 0:
+            self.follow_status_msg = FollowStatusMSG.CANCEL
+            self.node.get_logger().info('Follow Goal successfully canceled')
+            # self.ui.label_follow_status.setText("Cancel")
+        else:
+            self.follow_status_msg = FollowStatusMSG.CANCEL_ERROR
+            self.node.get_logger().info('Follow Goal failed to cancel')
+            # self.ui.label_follow_status.setText("Cancel error")
+
+    def follow_controller_start_follow(self):
+        self.node.get_logger().info('Waiting for action server...')
+        self._action_client_follow.wait_for_server()
+
+        goal_msg = ObjectTrack.Goal()
+        goal_msg.object_name = self.follow_target_name  # 此處填入須要跟隨的目標名稱（需為YOLO辨識結果中的）
+        self.node.get_logger().info(
+            'follow target name: {0}'.format(goal_msg.object_name))
+
+        self.node.get_logger().info('Sending follow goal request...')
+        self.follow_trigger = True
+        self._follow_send_goal_future = self._action_client_follow.send_goal_async(
+            goal_msg,
+            feedback_callback=self.follow_feedback_callback)
+
+        self._follow_send_goal_future.add_done_callback(
+            self.follow_goal_response_callback)
+
+    def follow_feedback_callback(self, feedback_msg):
+        feedback = feedback_msg.feedback
+        if feedback.status == 1 and self.follow_trigger:
+            self.follow_status_msg = FollowStatusMSG.FOLLOWING
+        if feedback.status == 0 and self.follow_trigger:
+            self.follow_status_msg = FollowStatusMSG.MISSING
+        # self.node.get_logger().info('Received feedback(elapsed_time): {0}'.format(feedback.elapsed_time))
+        # self.node.get_logger().info('Received feedback(status): {0}'.format(feedback.status))
+
+    def follow_goal_response_callback(self, future):
+        goal_handle = future.result()
+        if not goal_handle.accepted:
+            self.node.get_logger().info('Follow Goal rejected :(')
+            return
+        self._follow_goal_handle = goal_handle
+        self.ui.pushButton_follow_cancel.setEnabled(True)
+        self.node.get_logger().info('Follow Goal accepted :)')
+        self._follow_get_result_future = self._follow_goal_handle.get_result_async()
+        self._follow_get_result_future.add_done_callback(
+            self.follow_get_result_callback)
+
+    def follow_get_result_callback(self, future):
+        result = future.result().result
+        status = future.result().status
+        print('follow result: ', result)
+        print('follow status: ', status)
+        if status == GoalStatus.STATUS_SUCCEEDED:
+            self.node.get_logger().info('Follow succeeded! ')
+        elif status == GoalStatus.STATUS_CANCELED:
+            self.node.get_logger().info('Follow canceled! ')
+            self.follow_status_msg = FollowStatusMSG.CANCEL
+            self.ui.label_follow_status.setText("Cancel")
+        else:
+            self.node.get_logger().info(
+                'Follow failed with status: {0}'.format(status))
+    # ===========================================================
 
     def setup_control(self):
         self.robot_1_position = {'x': 0.0, 'y': 0.0, 'z': 0.0}
@@ -770,6 +873,21 @@ class MainWindow_controller(QtWidgets.QMainWindow):
             self.publish_robot_position_target)
         self.ui.pushButton_robot_2_send.clicked.connect(
             self.publish_robot_position_target)
+
+        # ===========================================================
+        # follow controller
+        self.ui.pushButton_follow_cancel.clicked.connect(
+            self.follow_controller_cancel)
+        self.ui.pushButton_follow_start.clicked.connect(
+            self.follow_controller_start_follow)
+        self.ui.pushButton_follow_update.clicked.connect(
+            self.follow_controller_update)
+
+        self.ui.pushButton_follow_start.setEnabled(False)
+        self.ui.pushButton_follow_cancel.setEnabled(False)
+        self.follow_status_msg = FollowStatusMSG.NONE
+        self.follow_trigger = False
+        # ===========================================================
 
         self.ui.pushButton_save_recongnition.clicked.connect(
             self.save_recongnition_to_file)
@@ -865,6 +983,7 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         self.ui.pushButton_zoom_out.setEnabled(False)
         self.ui.Slider_ImageSizeArea.setEnabled(False)
         self.ui.pushButton_show_camera_window.setEnabled(False)
+        self.ui.groupBox_follow_controller.setEnabled(False)
         # self.ui.pushButton_start_yolov5.setEnabled(False)
 
     def enabled_ui(self):
@@ -881,6 +1000,7 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         self.ui.pushButton_zoom_out.setEnabled(True)
         self.ui.Slider_ImageSizeArea.setEnabled(True)
         self.ui.pushButton_show_camera_window.setEnabled(True)
+        self.ui.groupBox_follow_controller.setEnabled(True)
         # self.ui.pushButton_start_yolov5.setEnabled(True)
     # ========================================================================================
 

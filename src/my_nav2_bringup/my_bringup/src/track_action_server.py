@@ -87,13 +87,13 @@ class TrackActionServer(Node):
         self.pid_feedback = [0.0, 0.0]
         self.pid = PID(self.pid_kp, self.pid_ki, self.pid_kd)
         self.pid.SetPoint = [float(640/2), 1.0]  # 目標量[畫面中心點（X）, 物體距離(m)]
-        self.pid.setSampleTime(0.1)
+        self.pid.setSampleTime(0.05)
         __twist_topic_name = "/" + self.args.robot_name + "/cmd_vel"
         print("__twist_topic_name: ", __twist_topic_name)
         self._publisher_twist_robot1 = self.create_publisher(
             Twist, __twist_topic_name, 10)
         self.control_PID_loop_timer_ = self.create_timer(
-            0.1, self.control_PID_loop)
+            0.05, self.control_PID_loop)
         self.control_PID_loop_run = DISABLE
         self.boundbox_list_num = 0
         self.PID_Control_Status = PID_Control_Status.MISSING
@@ -184,7 +184,7 @@ class TrackActionServer(Node):
         """ 第1步 """
         """Accept or reject a client request to begin an action."""
         self.get_logger().info('Received goal request')
-
+        self.pid.ITerm = [0.0, 0.0]
         return GoalResponse.ACCEPT
 
     def handle_accepted_callback(self, goal_handle):
@@ -237,7 +237,8 @@ class TrackActionServer(Node):
             feedback_msg.elapsed_time = round(time.time()-t1, 2)
             # Publish the feedback
             if self.control_PID_loop_run:
-                goal_handle.publish_feedback(feedback_msg)
+                if time.time()-feedback_msg.elapsed_time > 1.0:
+                    goal_handle.publish_feedback(feedback_msg)
             # time.sleep(1)
 
         goal_handle.succeed()

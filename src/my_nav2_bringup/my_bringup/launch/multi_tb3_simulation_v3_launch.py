@@ -57,8 +57,10 @@ def gen_robot_list(number_of_robots):
         robots.append({'name': "robot1", 'x_pose': -4.0,
                       'y_pose': -5.0, 'z_pose': 0.01})
     elif number_of_robots is 2:  # this  is for position my_own_world_only.model
-        robots.append({'name': "robot1", 'x_pose': -2.0,
-                      'y_pose': 1.0, 'z_pose': 0.01})
+        # robots.append({'name': "robot1", 'x_pose': -2.0,
+        #               'y_pose': 1.0, 'z_pose': 0.01})
+        robots.append({'name': "robot1", 'x_pose': -4.0,
+                      'y_pose': -5.0, 'z_pose': 0.01})
         robots.append({'name': "robot2", 'x_pose': 0.0,
                       'y_pose': -1.5, 'z_pose': 0.01})
     # 2022/09/30 modify===========================================
@@ -70,7 +72,7 @@ def generate_launch_description():
     bringup_dir = get_package_share_directory('my_bringup')
     launch_dir = os.path.join(bringup_dir, 'launch')
 
-    robots = gen_robot_list(1)
+    robots = gen_robot_list(2)
 
     # Simulation settings
     world = LaunchConfiguration('world')
