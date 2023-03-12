@@ -98,10 +98,10 @@
       </ode>
     </physics>
 
-    <model name="my_own_map_v2">
+    <model name="my_own_map_v3">
       <static>1</static>
       <include>
-        <uri>model://my_own_map_v2</uri>
+        <uri>model://my_own_map_v3</uri>
       </include>
     </model>
 

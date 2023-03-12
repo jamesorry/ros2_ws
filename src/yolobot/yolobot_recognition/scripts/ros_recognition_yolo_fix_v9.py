@@ -78,7 +78,8 @@ class Camera_subscriber(Node):
         # model.pt path(s) # 事先训练完成的权重文件，比如yolov5s.pt(官方事先訓練好的文件)
         # weights = 'yolov5s.pt'
         # weights = args.pt_file
-        weights = FILE.parents[0] / 'best.pt'
+        # weights = FILE.parents[0] / 'best.pt'
+        weights = FILE.parents[0] / 'people03.pt'
         # inference size (pixels) # 预测时的放缩后图片大小(因为YOLO算法需要预先放缩图片), 两个值分别是height, width
         self.imgsz = 640
         self.conf_thres = 0.25  # confidence threshold # 置信度阈值, 高于此值的bounding_box才会被保留
