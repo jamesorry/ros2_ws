@@ -10,6 +10,7 @@ uint16 ymax
 uint16 x_center
 uint16 y_center
 float32 center_dist
+float32 degree
 # uint16 img_width
 # uint16 img_height
 

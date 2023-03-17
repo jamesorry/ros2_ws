@@ -78,16 +78,40 @@ def main():
         if 'turtlebot3_diff_drive' in plugin.attrib.values():
             # The only plugin we care for now is 'diff_drive' which is
             # broadcasting a transform between`odom` and `base_footprint`
-            break
+            diff_drive_plugin = plugin
+        elif 'rgb_camera_driver' in plugin.attrib.values():
+            rgb_camera_plugin = plugin
+        elif 'intel_realsense_r200_depth_driver' in plugin.attrib.values():
+            intel_realsense_r200_plugin = plugin
+        elif 'turtlebot3_laserscan' in plugin.attrib.values():
+            laserscan_plugin = plugin
+        elif 'turtlebot3_imu' in plugin.attrib.values():
+            imu_plugin = plugin
+        elif 'turtlebot3_joint_state' in plugin.attrib.values():
+            oint_state_plugin = plugin
 
     # We change the namespace to the robots corresponding one
-    # tag_diff_drive_ros_params = diff_drive_plugin.find('ros')
-    # tag_diff_drive_ns = ET.SubElement(tag_diff_drive_ros_params, 'namespace')
-    # tag_diff_drive_ns.text = '/' + args.robot_namespace
-
-    ros_params = plugin.find('ros')
-    ros_tf_remap = ET.SubElement(ros_params, 'remapping')
+    tag_diff_drive_ros_params = diff_drive_plugin.find('ros')
+    tag_diff_drive_ns = ET.SubElement(tag_diff_drive_ros_params, 'namespace')
+    tag_diff_drive_ns.text = '/' + args.robot_namespace
+    ros_tf_remap = ET.SubElement(tag_diff_drive_ros_params, 'remapping')
     ros_tf_remap.text = '/tf:=/' + args.robot_namespace + '/tf'
+    
+    # ===================
+    # tag_rgb_camera_ros_params = diff_drive_plugin.find('ros')
+    # tag_rgb_camera_ns = ET.SubElement(tag_rgb_camera_ros_params, 'namespace')
+    # tag_rgb_camera_ns.text = '/' + args.robot_namespace
+    # rgb_camera_ros_tf_remap = ET.SubElement(tag_rgb_camera_ros_params, 'remapping')
+    # rgb_camera_ros_tf_remap.text = '/tf:=/' + args.robot_namespace + '/tf'
+    
+    
+    # ===================
+    
+    # ros_params = plugin.find('ros')
+    # ros_tf_remap = ET.SubElement(ros_params, 'remapping')
+    # print('************ros_tf_remap:', ros_tf_remap.text)
+    # ros_tf_remap.text = '/tf:=/' + args.robot_namespace + '/tf'
+    # print('************ros_tf_remap.text:', ros_tf_remap.text)
 
     # Set data for request
     request = SpawnEntity.Request()

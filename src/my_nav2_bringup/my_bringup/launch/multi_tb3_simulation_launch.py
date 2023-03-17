@@ -85,7 +85,7 @@ def generate_launch_description():
     launch_dir = os.path.join(bringup_dir, 'launch')
 
     # robots = gen_robot_list(2)
-    robots = gen_robot_list(4) # 2022/10/01 modify
+    robots = gen_robot_list(1) # 2022/10/01 modify
 
     # Simulation settings
     world = LaunchConfiguration('world')

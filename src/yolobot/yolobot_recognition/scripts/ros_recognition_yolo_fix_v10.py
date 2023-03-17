@@ -182,6 +182,7 @@ class Camera_subscriber(Node):
         self.x_list_copy = []
         self.y_list_copy = []
         self.z_list_copy = []
+        self.target_degree = 0.0
         __PointCloud2_topic_name = "/" + args.robot_name + \
             "/intel_realsense_r200_depth/points"
         print("__PointCloud2_topic_name: ", __PointCloud2_topic_name)
@@ -339,11 +340,15 @@ class Camera_subscriber(Node):
             one_box.probability = float(score)
             one_box.class_id = cls[i]
             one_box.center_dist = 0.0
+            one_box.degree = 0.0
 
-            pointcloud_num = int(self.imgsz * one_box.y_center + one_box.x_center)
+            pointcloud_num = (
+                self.imgsz * one_box.y_center + one_box.x_center)
+
             if self.update_pointcloud is True:
                 # float()
                 one_box.center_dist = self.z_list_copy[pointcloud_num]
+                one_box.degree = self.target_degree
 
             # print(f"xmin: {one_box.xmin}, ymin: {one_box.ymin}")
             # print(f"xmax: {one_box.xmax}, ymax: {one_box.ymax}")
@@ -494,10 +499,20 @@ class Camera_subscriber(Node):
                             if self.update_pointcloud is True:
                                 cv2.putText(img0, "(depth: {:.3f})".format(self.z_list_copy[pointcloud_num]), (int(
                                     x_center - 40), int(y_center + 10)), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 1)
-                                cv2.putText(img0, "(x: {:.3f})".format(self.x_list_copy[pointcloud_num]), (int(
+                                triangle_base_side_distance = self.x_list_copy[pointcloud_num]
+                                triangle_hight_distance = self.z_list_copy[pointcloud_num]
+                                self.target_degree = math.degrees(
+                                    math.atan(triangle_base_side_distance/triangle_hight_distance))
+                                degree_b = math.degrees(
+                                    math.atan(triangle_hight_distance/triangle_base_side_distance))
+                                cv2.putText(img0, "(degree_a: {:.3f})".format(self.target_degree), (int(
                                     x_center - 40), int(y_center + 30)), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 1)
-                                cv2.putText(img0, "(y: {:.3f})".format(self.y_list_copy[pointcloud_num]), (int(
+                                cv2.putText(img0, "(degree_b: {:.3f})".format(degree_b), (int(
                                     x_center - 40), int(y_center + 50)), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 1)
+                                # cv2.putText(img0, "(x: {:.3f})".format(self.x_list_copy[pointcloud_num]), (int(
+                                #     x_center - 40), int(y_center + 30)), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 1)
+                                # cv2.putText(img0, "(y: {:.3f})".format(self.y_list_copy[pointcloud_num]), (int(
+                                #     x_center - 40), int(y_center + 50)), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 1)
 
         cv2.imshow("IMAGE", img0)
         if not self.Need_Take_Picture:

@@ -151,7 +151,7 @@ def generate_launch_description():
     # Specify the actions
     start_gazebo_server_cmd = ExecuteProcess(
         condition=IfCondition(use_simulator),
-        cmd=['gzserver', '-s', 'libgazebo_ros_init.so', world],
+        cmd=['gzserver', '--verbose' ,'-s', 'libgazebo_ros_init.so', '-s', 'libgazebo_ros_factory.so', world],
         cwd=[launch_dir], output='screen')
 
     start_gazebo_client_cmd = ExecuteProcess(
@@ -161,6 +161,8 @@ def generate_launch_description():
         cwd=[launch_dir], output='screen')
 
     urdf = os.path.join(bringup_dir, 'urdf', 'turtlebot3_waffle.urdf')
+
+    print("tb3_simulation_launch.py: ",urdf)
 
     start_robot_state_publisher_cmd = Node(
         condition=IfCondition(use_robot_state_pub),

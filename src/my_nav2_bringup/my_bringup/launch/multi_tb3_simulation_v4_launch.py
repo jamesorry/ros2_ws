@@ -54,8 +54,8 @@ def gen_robot_list(number_of_robots):
     #                   'y_pose': -0.5, 'z_pose': 0.01})
     # 修改啟動時座標的設定方式
     if number_of_robots is 1:
-        robots.append({'name': "robot1", 'x_pose': 0.0,
-                      'y_pose': 0.0, 'z_pose': 0.01})
+        robots.append({'name': "robot1", 'x_pose': 1.5,
+                      'y_pose': -3.0, 'z_pose': 0.01})
     elif number_of_robots is 2:  # this  is for position my_own_world_only.model
         # robots.append({'name': "robot1", 'x_pose': -2.0,
         #               'y_pose': 1.0, 'z_pose': 0.01})
@@ -158,7 +158,7 @@ def generate_launch_description():
     declare_autostart_cmd = DeclareLaunchArgument(
         'autostart', default_value='True',
         description='Automatically startup the stacks')
-
+    
     declare_rviz_config_file_cmd = DeclareLaunchArgument(
         'rviz_config',
         default_value=os.path.join(
@@ -303,7 +303,8 @@ def generate_launch_description():
     declare_map_pgm_cmd = DeclareLaunchArgument(
         'map_pgm',
         default_value=os.path.join(
-            bringup_dir, 'maps', 'my_own_map_v2.pgm'), # 2022/09/30 modify
+            bringup_dir, 'maps', 'my_own_map_v3.pgm'), # 2023/03/17 modify
+            # bringup_dir, 'maps', 'my_own_map_v2.pgm'), # 2022/09/30 modify
         description='Full path to pgm map to load')
 
     # run SendMapImage node
