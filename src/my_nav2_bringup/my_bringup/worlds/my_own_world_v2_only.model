@@ -9,7 +9,7 @@
     <include>
       <uri>model://sun</uri>
     </include>
-    
+
     <actor name="actor_walking">
       <skin>
         <filename>walk.dae</filename>
@@ -21,10 +21,10 @@
       </animation>
       <script>
         <loop>true</loop>
-        <delay_start>0.00</delay_start>
+        <delay_start>55.00</delay_start>
         <auto_start>true</auto_start>
         <trajectory id="0" type="walk" tension="0.6">
-            <waypoint>
+          <!-- <waypoint>
                 <time>0</time>
                 <pose>0 0 0 0 0 0</pose>
             </waypoint>
@@ -59,7 +59,135 @@
             <waypoint>
                 <time>58.5</time>
                 <pose>0 0 0 0 0 0</pose>
-            </waypoint>
+            </waypoint> -->
+          <waypoint>
+            <time>5</time>
+            <pose>2.0 -8.0 0.0 0.0 0.0 3.142</pose>
+          </waypoint>
+          <waypoint>
+            <time>10</time>
+            <pose>-6.0 -8.0 0.0 0.0 0.0 3.142</pose>
+          </waypoint>
+          <waypoint>
+            <time>15</time>
+            <pose>-8.0 -8.0 0.0 0.0 0.0 0.0</pose>
+          </waypoint>
+          <waypoint>
+            <time>20</time>
+            <pose>-8.0 -8.0 0.0 0.0 0.0 1.57</pose>
+          </waypoint>
+          <waypoint>
+            <time>25</time>
+            <pose>-8.0 -6.0 0.0 0.0 0.0 1.57</pose>
+          </waypoint>
+          <waypoint>
+            <time>50</time>
+            <pose>-8.0 8.0 0.0 0.0 0.0 1.57</pose>
+          </waypoint>
+          <waypoint>
+            <time>55</time>
+            <pose>-8.0 10.0 0.0 0.0 0.0 1.57</pose>
+          </waypoint>
+          <waypoint>
+            <time>60</time>
+            <pose>-8.0 10.0 0.0 0.0 0.0 0.0</pose>
+          </waypoint>
+          <waypoint>
+            <time>65</time>
+            <pose>-6.0 10.0 0.0 0.0 0.0 0.0</pose>
+          </waypoint>
+          <waypoint>
+            <time>85</time>
+            <pose>8.0 10.0 0.0 0.0 0.0 0.0</pose>
+          </waypoint>
+          <waypoint>
+            <time>90</time>
+            <pose>10.0 12.0 0.0 0.0 0.0 0.0</pose>
+          </waypoint>
+          <waypoint>
+            <time>95</time>
+            <pose>10.0 12.0 0.0 0.0 0.0 2.355</pose>
+          </waypoint>
+          <waypoint>
+            <time>100</time>
+            <pose>9.0 13.0 0.0 0.0 0.0 2.355</pose>
+          </waypoint>
+          <waypoint>
+            <time>105</time>
+            <pose>8.0 14.0 0.0 0.0 0.0 2.355</pose>
+          </waypoint>
+          <waypoint>
+            <time>110</time>
+            <pose>8.0 14.0 0.0 0.0 0.0 3.142</pose>
+          </waypoint>
+          <waypoint>
+            <time>135</time>
+            <pose>-6.0 14.0 0.0 0.0 0.0 3.142</pose>
+          </waypoint>
+          <waypoint>
+            <time>140</time>
+            <pose>-8.0 14.0 0.0 0.0 0.0 3.142</pose>
+          </waypoint>
+          <waypoint>
+            <time>145</time>
+            <pose>-8.0 14.0 0.0 0.0 0.0 -1.57</pose>
+          </waypoint>
+          <waypoint>
+            <time>150</time>
+            <pose>-8.0 12.0 0.0 0.0 0.0 -1.57</pose>
+          </waypoint>
+          <waypoint>
+            <time>175</time>
+            <pose>-8.0 0.0 0.0 0.0 0.0 -1.57</pose>
+          </waypoint>
+          <waypoint>
+            <time>180</time>
+            <pose>-10.0 -2.0 0.0 0.0 0.0 -1.57</pose>
+          </waypoint>
+          <waypoint>
+            <time>190</time>
+            <pose>-12.0 -6.0 0.0 0.0 0.0 -1.57</pose>
+          </waypoint>
+          <waypoint>
+            <time>195</time>
+            <pose>-10.0 -8.0 0.0 0.0 0.0 -1.57</pose>
+          </waypoint>
+          <waypoint>
+            <time>200</time>
+            <pose>-10.0 -8.0 0.0 0.0 0.0 0.0</pose>
+          </waypoint>
+          <waypoint>
+            <time>230</time>
+            <pose>4.0 -8.0 0.0 0.0 0.0 0.0</pose>
+          </waypoint>
+          <waypoint>
+            <time>235</time>
+            <pose>6.0 -6.0 0.0 0.0 0.0 0.0</pose>
+          </waypoint>
+          <waypoint>
+            <time>240</time>
+            <pose>6.0 -4.0 0.0 0.0 0.0 1.57</pose>
+          </waypoint>
+          <waypoint>
+            <time>250</time>
+            <pose>4.0 -4.0 0.0 0.0 0.0 1.57</pose>
+          </waypoint>
+          <waypoint>
+            <time>260</time>
+            <pose>4.0 -4.0 0.0 0.0 0.0 3.142</pose>
+          </waypoint>
+          <waypoint>
+            <time>270</time>
+            <pose>2.0 -6.0 0.0 0.0 0.0 3.142</pose>
+          </waypoint>
+          <waypoint>
+            <time>275</time>
+            <pose>2.0 -6.0 0.0 0.0 0.0 -1.57</pose>
+          </waypoint>
+          <waypoint>
+            <time>290</time>
+            <pose>2.0 -8.0 0.0 0.0 0.0 -1.57</pose>
+          </waypoint>
         </trajectory>
       </script>
     </actor>

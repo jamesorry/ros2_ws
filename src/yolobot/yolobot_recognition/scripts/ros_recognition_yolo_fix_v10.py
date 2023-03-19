@@ -207,11 +207,11 @@ class Camera_subscriber(Node):
         self.pid.setSampleTime(0.01)
         __twist_topic_name = "/" + args.robot_name + "/cmd_vel"
         print("__twist_topic_name: ", __twist_topic_name)
-        # self._publisher_twist_robot1 = self.create_publisher(
-        #     Twist, __twist_topic_name, 10)
-        # if self.Need_PID_Control:
-        #     self.control_PID_loop_timer_ = self.create_timer(
-        #         0.01, self.control_PID_loop)
+        self._publisher_twist_robot1 = self.create_publisher(
+            Twist, __twist_topic_name, 10)
+        if self.Need_PID_Control:
+            self.control_PID_loop_timer_ = self.create_timer(
+                0.01, self.control_PID_loop)
         # ================================================================
         self.start_time = time.time()
         # FPS update time in seconds
@@ -224,6 +224,7 @@ class Camera_subscriber(Node):
         self.Image_Path = FILE.parents[0] / 'images'
         self.image_count = self.get_files_num(self.Image_Path)
         print("image_count nums: ", self.image_count)
+        self.init_twist_robot1()
         # ================================================================
 
     def x_linear_map(self, x, in_min, in_max, out_min, out_max):
@@ -233,8 +234,8 @@ class Camera_subscriber(Node):
         return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
 
     def _send_twist_robot1(self, z_angular, x_linear):
-        # if (self._publisher_twist_robot1 is None):
-        #     return
+        if (self._publisher_twist_robot1 is None):
+            return
         twist = Twist()
 
         if self.pid_p[0] != 0:
@@ -270,7 +271,7 @@ class Camera_subscriber(Node):
         twist.angular.x = 0.0
         twist.angular.y = 0.0
         twist.angular.z = z_angular
-        # self._publisher_twist_robot1.publish(twist)
+        self._publisher_twist_robot1.publish(twist)
 
     def self_rotate(self, z_angular, x_linear):
         if (self._publisher_twist_robot1 is None):
@@ -282,6 +283,18 @@ class Camera_subscriber(Node):
         twist.angular.x = 0.0
         twist.angular.y = 0.0
         twist.angular.z = z_angular
+        self._publisher_twist_robot1.publish(twist)
+        
+    def init_twist_robot1(self):
+        if (self._publisher_twist_robot1 is None):
+            return
+        twist = Twist()
+        twist.linear.x = 0.0
+        twist.linear.y = 0.0
+        twist.linear.z = 0.0
+        twist.angular.x = 0.0
+        twist.angular.y = 0.0
+        twist.angular.z = 0.0
         self._publisher_twist_robot1.publish(twist)
 
     def control_PID_loop(self):
@@ -300,10 +313,12 @@ class Camera_subscriber(Node):
             self._send_twist_robot1(output[0], output[1])
         else:
             self.pid.ITerm = [0.0, 0.0]
-            if self.target_center_pixel[0] <= 320:
-                self.self_rotate(0.08, 0.0)
-            elif self.target_center_pixel[0] > 320:
-                self.self_rotate(-0.08, 0.0)
+            print("Target Missing!!!")
+            self.init_twist_robot1()
+            # if self.target_center_pixel[0] <= 320:
+            #     self.self_rotate(0.08, 0.0)
+            # elif self.target_center_pixel[0] > 320:
+            #     self.self_rotate(-0.08, 0.0)
 
     def callback_pointcloud_XY_Plot(self, data):
         assert isinstance(data, PointCloud2)
@@ -355,8 +370,9 @@ class Camera_subscriber(Node):
             # print(f"x_center: {one_box.x_center}, y_center: {one_box.y_center}")
 
             # if (one_box.x_center >= 250 and one_box.x_center <= 390):
-            bboxes_msg.bounding_boxes.append(one_box)
-            i = i+1
+            if one_box.center_dist < 3.0:
+                bboxes_msg.bounding_boxes.append(one_box)
+                i = i+1
             # print(i)
         bboxes_msg.bounding_num = i
         self.publish_bbox.publish(bboxes_msg)
@@ -493,22 +509,25 @@ class Camera_subscriber(Node):
                             self.target_center_pixel = (x_center, y_center)
                             # print("x_center: ", x_center, "; y_center: ", y_center)
                             # print("integer class: ", c, "; lable: ", label)
-                            cv2.circle(img0, (x_center, y_center),
-                                       1, (0, 0, 255), 3)
+                            # ! 顯示中心點
+                            # cv2.circle(img0, (x_center, y_center),
+                            #            1, (0, 0, 255), 3)
                             pointcloud_num = self.imgsz * y_center + x_center
                             if self.update_pointcloud is True:
-                                cv2.putText(img0, "(depth: {:.3f})".format(self.z_list_copy[pointcloud_num]), (int(
-                                    x_center - 40), int(y_center + 10)), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 1)
+                                # ! 顯示中心點深度距離
+                                # cv2.putText(img0, "(depth: {:.3f})".format(self.z_list_copy[pointcloud_num]), (int(
+                                #     x_center - 40), int(y_center + 10)), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 1)
                                 triangle_base_side_distance = self.x_list_copy[pointcloud_num]
                                 triangle_hight_distance = self.z_list_copy[pointcloud_num]
+                                # ! 顯示中心點角度
                                 self.target_degree = math.degrees(
                                     math.atan(triangle_base_side_distance/triangle_hight_distance))
-                                degree_b = math.degrees(
-                                    math.atan(triangle_hight_distance/triangle_base_side_distance))
-                                cv2.putText(img0, "(degree_a: {:.3f})".format(self.target_degree), (int(
-                                    x_center - 40), int(y_center + 30)), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 1)
-                                cv2.putText(img0, "(degree_b: {:.3f})".format(degree_b), (int(
-                                    x_center - 40), int(y_center + 50)), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 1)
+                                # cv2.putText(img0, "(degree_a: {:.3f})".format(self.target_degree), (int(
+                                #     x_center - 40), int(y_center + 30)), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 1)
+                                # degree_b = math.degrees(
+                                #     math.atan(triangle_hight_distance/triangle_base_side_distance))
+                                # cv2.putText(img0, "(degree_b: {:.3f})".format(degree_b), (int(
+                                #     x_center - 40), int(y_center + 50)), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 1)
                                 # cv2.putText(img0, "(x: {:.3f})".format(self.x_list_copy[pointcloud_num]), (int(
                                 #     x_center - 40), int(y_center + 30)), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 1)
                                 # cv2.putText(img0, "(y: {:.3f})".format(self.y_list_copy[pointcloud_num]), (int(

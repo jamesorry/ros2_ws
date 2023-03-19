@@ -12,7 +12,9 @@ import numpy as np
 from cv_bridge import CvBridge, CvBridgeError
 bridge = CvBridge()
 # use oop
-
+from kalmanfilter import KalmanFilter
+# Load Kalman filter to predict the trajectory
+kf = KalmanFilter()
 
 def quaternion_to_euler_angles(x, y, z, w):
     # 四元數轉歐拉角
@@ -225,7 +227,7 @@ class MyNode(Node):
                                     int(another_center_y*(1.0)))
             # ! 修改箭頭方向
             cv2.arrowedLine(map, another_center_point, center_point,
-                            (0, 0, 255), 3)
+                            (0, 0, 255), thickness=3, line_type=cv2.LINE_4)
             # ! 印出像素地圖的中心點
             cv2.drawMarker(map, (int(self.origin_width/2), int(self.origin_height/2)),
                            (0, 0, 0), markerType=2, markerSize=3)
@@ -246,19 +248,25 @@ class MyNode(Node):
                     self.__points.append(another_center_point)
                     cv2.drawMarker(map, another_center_point,
                                    (0, 0, 199), markerType=2, markerSize=5)
+                    self.predicted = kf.predict(int(another_center_x*1.0), int(another_center_y*1.0))
+                    #!印出預測的下一個座標(圓形)
+                    cv2.circle(map, self.predicted, 3, (255, 255, 0), 1)
+                    for i in range(3):
+                        self.predicted = kf.predict(self.predicted[0], self.predicted[1])
+                        cv2.circle(map, self.predicted, 3, (20, 220, 0), 1)
+            #!印出目標物移動軌跡(線段)
             if len(self.__points) > 1:
                 for i in range(len(self.__points) - 1):
-                    cv2.line(map, self.__points[i], self.__points[i+1], color = (255, 0, 0), thickness = 2)
+                    cv2.line(map, self.__points[i], self.__points[i+1], color = (255, 0, 0), thickness = 1)
 
             # cv2.arrowedLine(输入图像，起始点(x,y)，结束点(x,y)，线段颜色，线段厚度，线段样式，位移因数，箭头因数)
-            dsize = (int(2.0 * self.origin_width),
-                     int(2.0 * self.origin_height))
+            dsize = (int(3.0 * self.origin_width),
+                     int(3.0 * self.origin_height))
             dst = cv2.resize(map, dsize)
             cv2.imshow('my_test_img_map', dst)
             key = cv2.waitKey(1)
             if key == 27:
                 self.__points.clear()
-            # self.setImage(map)
 
 
 def main(args=None):
