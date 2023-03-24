@@ -350,7 +350,7 @@ global_costmap:
 map_server:
   ros__parameters:
     use_sim_time: False
-    yaml_filename: "my_own_map_v2.yaml" #2022/09/30 modify
+    yaml_filename: "my_own_map_v3.yaml" #2022/09/30 modify
     # yaml_filename: "turtlebot3_world.yaml" #2022/09/30 modify
 
 map_saver:

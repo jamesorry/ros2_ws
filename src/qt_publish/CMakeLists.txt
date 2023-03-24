@@ -87,6 +87,7 @@ install(
   scripts/python_ui_test_01.py
   scripts/pyqt5_test_02.py
   scripts/SendMapImage.py
+  scripts/SendMapImage_v2.py
   scripts/test_point_cloud.py
   scripts/start_pyqt5_ui.py
   DESTINATION lib/${PROJECT_NAME}

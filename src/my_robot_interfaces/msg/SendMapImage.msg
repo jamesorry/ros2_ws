@@ -1,1 +1,3 @@
 sensor_msgs/Image map_image
+float64 origin_position_x
+float64 origin_position_y

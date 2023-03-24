@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from kalmanfilter import KalmanFilter
 from nav_msgs.msg import *
 from sensor_msgs.msg import *
 from my_robot_interfaces.msg import *
@@ -12,9 +13,10 @@ import numpy as np
 from cv_bridge import CvBridge, CvBridgeError
 bridge = CvBridge()
 # use oop
-from kalmanfilter import KalmanFilter
 # Load Kalman filter to predict the trajectory
 kf = KalmanFilter()
+import time
+from collections import deque
 
 def quaternion_to_euler_angles(x, y, z, w):
     # 四元數轉歐拉角
@@ -91,7 +93,14 @@ class MyNode(Node):
         self.create_timer(0.5, self.timer_callback)
         self.now_distance = 0.0
         self.last_distance = 0.0
-        self.__points = []
+        self.__points = deque(maxlen=200)
+
+        self.laser_ranges = None
+        self.laser_subscription = self.create_subscription(
+            LaserScan, '/robot1/scan', self.scan_callback, 10)
+        self.laser_subscription
+        
+        self.coordinates = deque(maxlen=20)  # 创建一个队列，并指定最大长度为10
 
     def timer_callback(self):
         self.pose_to_pixel_map()
@@ -196,6 +205,8 @@ class MyNode(Node):
             print("self.origin_height: ", self.origin_height)
             print("self.origin_width: ", self.origin_width)
             print("self.origin_channel: ", self.origin_channel)
+            print("origin_position_x: ", img.origin_position_x)
+            print("origin_position_y: ", img.origin_position_y)
             self.fix_map_center_pixel_x = -8.8/self.map_resolution
             self.fix_map_center_pixel_y = -5.24/self.map_resolution
             print("self.fix_map_center_pixel_x: ", self.fix_map_center_pixel_x)
@@ -205,7 +216,17 @@ class MyNode(Node):
             self.map_center_pixel_y = (
                 (self.origin_height + self.fix_map_center_pixel_y))
 
+    def scan_callback(self, msg: LaserScan):
+        self.laser_ranges = msg
+        for i in range(len(self.laser_ranges.ranges)):
+            degree = i * self.laser_ranges.angle_increment * 180 / 3.14159
+            distance = self.laser_ranges.ranges[i]
+            # if degree > 0.0 and degree < 180.0:
+            #     print("Degree: {:0.2f}, Distance: {:0.2f}".format(
+            #         degree, distance))
+
     def pose_to_pixel_map(self):
+        start = time.time()
         if self.Init_Map_Image is not None:
             map = self.Init_Map_Image.copy()
             center_x = self.pose_to_pixel_cell(
@@ -229,14 +250,35 @@ class MyNode(Node):
             cv2.arrowedLine(map, another_center_point, center_point,
                             (0, 0, 255), thickness=3, line_type=cv2.LINE_4)
             # ! 印出像素地圖的中心點
-            cv2.drawMarker(map, (int(self.origin_width/2), int(self.origin_height/2)),
-                           (0, 0, 0), markerType=2, markerSize=3)
+            # cv2.drawMarker(map, (int(self.origin_width/2), int(self.origin_height/2)),
+            #                (0, 0, 0), markerType=2, markerSize=3)
             # ! 印出地圖機器人初始位置中心點
-            cv2.drawMarker(map, (int(self.map_center_pixel_x), int(self.map_center_pixel_y)),
-                           (0, 100, 100), markerType=2, markerSize=3)
+            # cv2.drawMarker(map, (int(self.map_center_pixel_x), int(self.map_center_pixel_y)),
+            #                (0, 100, 100), markerType=2, markerSize=3)
+
+            # ! 繪製雷射掃描的角度與距離
+            for i in range(len(self.laser_ranges.ranges)):
+                degree = i * self.laser_ranges.angle_increment * 180 / 3.14159
+                distance = self.laser_ranges.ranges[i]
+                if not math.isinf(distance):
+                    another_center = self.get_another_point(float(
+                        self.robot_1_position['x']), -1.0*float(self.robot_1_position['y']), (float(degree+self.robot_1_euler_angles['yaw'])), distance)
+                    another_center_x = self.pose_to_pixel_cell(
+                        float(another_center[0]), self.map_center_pixel_x)
+                    another_center_y = self.pose_to_pixel_cell(
+                        -1.0*float(another_center[1]), self.map_center_pixel_y)
+                    another_center_point = (int(another_center_x*1.0),
+                                            int(another_center_y*(1.0)))
+                    if (degree > 0.0 and degree < 90.0) or (degree > 270.0 and degree < 360.0):
+                        cv2.circle(map, another_center_point,
+                                   3, (10, 10, 255), -1)
+                    else:
+                        cv2.circle(map, another_center_point,
+                                   3, (0, 255, 255), -1)
 
             for pos in self.yolo_result_robot1["position"]:
                 # print("pos: ", pos)
+                kf.init()
                 another_center_x = self.pose_to_pixel_cell(
                     float(pos[0]), self.map_center_pixel_x)
                 another_center_y = self.pose_to_pixel_cell(
@@ -248,26 +290,47 @@ class MyNode(Node):
                     self.__points.append(another_center_point)
                     cv2.drawMarker(map, another_center_point,
                                    (0, 0, 199), markerType=2, markerSize=5)
-                    self.predicted = kf.predict(int(another_center_x*1.0), int(another_center_y*1.0))
+                    # self.predicted = kf.predict(
+                    #     another_center_x, another_center_y)
+                    self.coordinates.append(another_center_point)  # 将包含x和y坐标的元组添加到队列的右侧
+                    for pt in self.coordinates:
+                        self.predicted = kf.predict(pt[0], pt[1])
+                        print("pt: ", pt)
                     #!印出預測的下一個座標(圓形)
+                    print("another_center_point: ", another_center_point)
+                    print("self.predicted: ", self.predicted)
                     cv2.circle(map, self.predicted, 3, (255, 255, 0), 1)
-                    for i in range(3):
-                        self.predicted = kf.predict(self.predicted[0], self.predicted[1])
-                        cv2.circle(map, self.predicted, 3, (20, 220, 0), 1)
+                    predicted = self.predicted
+                    #!印出未來5筆預測的座標(圓形)
+                    for i in range(5):
+                        predicted = kf.predict(predicted[0], predicted[1])
+                        cv2.circle(map, predicted, 3, (200, 220, 100), 1)
+                        # predicted = kf.only_predict()
+                        # cv2.circle(map, predicted, 3, (200, 220, 100), 1)
+                        print("predicted: ", predicted)
             #!印出目標物移動軌跡(線段)
             if len(self.__points) > 1:
+                #! 只畫出線
                 for i in range(len(self.__points) - 1):
-                    cv2.line(map, self.__points[i], self.__points[i+1], color = (255, 0, 0), thickness = 1)
+                    cv2.line(
+                        map, self.__points[i], self.__points[i+1], color=(255, 0, 0), thickness=1)
+                #! 只畫出圓圈
+                # for i in range(len(self.__points)):
+                #     cv2.circle(
+                #         map, (self.__points[i]), 3, color=(255, 0, 0), thickness=1)
+                # print("self.__points: ", self.__points)
 
             # cv2.arrowedLine(输入图像，起始点(x,y)，结束点(x,y)，线段颜色，线段厚度，线段样式，位移因数，箭头因数)
             dsize = (int(3.0 * self.origin_width),
                      int(3.0 * self.origin_height))
             dst = cv2.resize(map, dsize)
             cv2.imshow('my_test_img_map', dst)
-            key = cv2.waitKey(1)
+            key = cv2.waitKey(200)
             if key == 27:
                 self.__points.clear()
-
+                kf.init()
+            loop_time = int((time.time()-start) * 1000)
+            # print("loop time(ms): ", loop_time)
 
 def main(args=None):
     rclpy.init(args=args)
