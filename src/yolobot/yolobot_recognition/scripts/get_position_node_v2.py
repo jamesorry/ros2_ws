@@ -308,6 +308,7 @@ class MyNode(Node):
                         # predicted = kf.only_predict()
                         # cv2.circle(map, predicted, 3, (200, 220, 100), 1)
                         print("predicted: ", predicted)
+                        
             #!印出目標物移動軌跡(線段)
             if len(self.__points) > 1:
                 #! 只畫出線
