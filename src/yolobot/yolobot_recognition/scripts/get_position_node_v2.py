@@ -129,8 +129,8 @@ class MyNode(Node):
 
     def pose_to_pixel_cell(self, position, center_pixel):
         # pose.x / resolution + center_point = cell_x
-        return (position / self.map_resolution) + center_pixel
-
+        return ((position) / self.map_resolution) + center_pixel
+    
     def pixel_cell_to_pose(self, pixel_cell, center_pixel):
         return (pixel_cell - center_pixel) * self.map_resolution
 
@@ -199,8 +199,22 @@ class MyNode(Node):
         # https://blog.csdn.net/sunyoop/article/details/79965673
         if(self.Map_Image is None):
             # self.get_logger().info("loadImage Ing.....")
-            self.Map_Image = bridge.imgmsg_to_cv2(img.map_image, "bgr8")
+            self.Map_Image = bridge.imgmsg_to_cv2(img.map_image, desired_encoding="bgr8")
+            kf.ObstacleDetector(self.Map_Image)
             self.origin_height, self.origin_width, self.origin_channel = self.Map_Image.shape
+            
+            # 轉換圖像為灰階
+            gray = cv2.cvtColor(self.Map_Image, cv2.COLOR_BGR2GRAY)
+
+            # 二值化圖像
+            ret, thresh = cv2.threshold(gray, 30, 255, 0)
+
+            # 找到圖像中的輪廓
+            contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+            # 繪製所有輪廓
+            cv2.drawContours(self.Map_Image, contours, -1, (0, 255, 0), 1)
+            
             self.Init_Map_Image = self.Map_Image
             print("self.origin_height: ", self.origin_height)
             print("self.origin_width: ", self.origin_width)
@@ -294,19 +308,18 @@ class MyNode(Node):
                     #     another_center_x, another_center_y)
                     self.coordinates.append(another_center_point)  # 将包含x和y坐标的元组添加到队列的右侧
                     for pt in self.coordinates:
+                        # self.predicted = kf.predict_avoid_obstacle(pt[0], pt[1])
                         self.predicted = kf.predict(pt[0], pt[1])
-                        print("pt: ", pt)
                     #!印出預測的下一個座標(圓形)
                     print("another_center_point: ", another_center_point)
                     print("self.predicted: ", self.predicted)
                     cv2.circle(map, self.predicted, 3, (255, 255, 0), 1)
                     predicted = self.predicted
                     #!印出未來5筆預測的座標(圓形)
-                    for i in range(5):
-                        predicted = kf.predict(predicted[0], predicted[1])
+                    for i in range(10):
+                        predicted = kf.predict_avoid_obstacle(predicted[0], predicted[1])
+                        # predicted = kf.predict(predicted[0], predicted[1])
                         cv2.circle(map, predicted, 3, (200, 220, 100), 1)
-                        # predicted = kf.only_predict()
-                        # cv2.circle(map, predicted, 3, (200, 220, 100), 1)
                         print("predicted: ", predicted)
                         
             #!印出目標物移動軌跡(線段)
@@ -322,8 +335,8 @@ class MyNode(Node):
                 # print("self.__points: ", self.__points)
 
             # cv2.arrowedLine(输入图像，起始点(x,y)，结束点(x,y)，线段颜色，线段厚度，线段样式，位移因数，箭头因数)
-            dsize = (int(3.0 * self.origin_width),
-                     int(3.0 * self.origin_height))
+            dsize = (int(1.0 * self.origin_width),
+                     int(1.0 * self.origin_height))
             dst = cv2.resize(map, dsize)
             cv2.imshow('my_test_img_map', dst)
             key = cv2.waitKey(200)
