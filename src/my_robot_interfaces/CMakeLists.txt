@@ -28,6 +28,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/BoundingBoxesV2.msg"
   "msg/ObjectCount.msg"
   "msg/SendMapImage.msg"
+  "msg/CurvePIDarray.msg"
+  "msg/CurvePID.msg"
   "srv/ComputeRectangleArea.srv"
   "srv/SetLed.srv"
   "srv/CatchTurtle.srv"

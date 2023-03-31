@@ -153,7 +153,7 @@ class Camera_subscriber(Node):
         __bbox_topic_name = "/" + args.robot_name + "/yolov5/bounding_boxes"
         print("__bbox_topic_name: ", __bbox_topic_name)
         self.publish_bbox = self.create_publisher(
-            BoundingBoxesV2, __bbox_topic_name, 10)
+            BoundingBoxesV2, __bbox_topic_name, 20)
 
         __image_topic_name = "/" + args.robot_name + "/yolov5/image_raw"
         print("__image_topic_name: ", __image_topic_name)
@@ -202,8 +202,8 @@ class Camera_subscriber(Node):
         self.pid_d = [D, D]
         self.pid_feedback = [0.0, 0.0]
         self.pid = PID(self.pid_p, self.pid_i, self.pid_d)
-        # 目標量[畫面中心點（X）, 物體距離(m)]
-        self.pid.SetPoint = [float(self.imgsz/2), 1.0]
+        # ! 目標量[畫面中心點（X）, 物體距離(m)]
+        self.pid.SetPoint = [float(self.imgsz/2), 1.3]
         self.pid.setSampleTime(0.01)
         __twist_topic_name = "/" + args.robot_name + "/cmd_vel"
         print("__twist_topic_name: ", __twist_topic_name)
@@ -240,26 +240,26 @@ class Camera_subscriber(Node):
 
         if self.pid_p[0] != 0:
             z_angular = self.z_angular_map(
-                z_angular, -320.0 * self.pid_p[0], 320.0 * self.pid_p[0], -0.18, 0.18)  # 旋轉
+                z_angular, (-320.0 * self.pid_p[0]), (320.0 * self.pid_p[0]), -0.28, 0.28)  # 旋轉
         print("z_angular: ", z_angular)
 
         if self.pid_p[1] != 0:
             x_linear = self.x_linear_map(
-                x_linear, -1.0 * self.pid_p[1], 1.0 * self.pid_p[1], 0.18, -0.18)  # 前進後退
+                x_linear, (-1.0 * self.pid_p[1]), (1.0 * self.pid_p[1]), 0.28, -0.28)  # 前進後退
         print("x_linear: ", x_linear)
         print("===============================")
         # 限制速度
-        if x_linear > 0.5:
+        if x_linear > 0.9:
             x_linear = 0.0
-        if x_linear < -0.5:
+        if x_linear < -0.9:
             x_linear = -0.0
         if math.isnan(x_linear) or math.isinf(x_linear):
             x_linear = 0.0
             self.pid.ITerm[1] = 0.0
 
-        if z_angular > 0.2:
+        if z_angular > 0.5:
             z_angular = 0.0
-        if z_angular < -0.2:
+        if z_angular < -0.5:
             z_angular = -0.0
         if math.isnan(z_angular) or math.isinf(z_angular):
             z_angular = 0.0
@@ -284,7 +284,7 @@ class Camera_subscriber(Node):
         twist.angular.y = 0.0
         twist.angular.z = z_angular
         self._publisher_twist_robot1.publish(twist)
-        
+
     def init_twist_robot1(self):
         if (self._publisher_twist_robot1 is None):
             return
@@ -370,7 +370,7 @@ class Camera_subscriber(Node):
             # print(f"x_center: {one_box.x_center}, y_center: {one_box.y_center}")
 
             # if (one_box.x_center >= 250 and one_box.x_center <= 390):
-            if one_box.center_dist < 3.0:
+            if one_box.center_dist < 5.0:
                 bboxes_msg.bounding_boxes.append(one_box)
                 i = i+1
             # print(i)
@@ -535,9 +535,9 @@ class Camera_subscriber(Node):
 
         cv2.imshow("IMAGE", img0)
         if not self.Need_Take_Picture:
-            renamed_list = self.rename_duplicate(self.class_list)
+            # renamed_list = self.rename_duplicate(self.class_list)
             self.yolovFive2bboxes_msgs(bboxes=[x_min_list, y_min_list, x_max_list, y_max_list],
-                                       scores=confidence_list, cls=renamed_list, img_header=data.header)
+                                       scores=confidence_list, cls=self.class_list, img_header=data.header)
             self.publish_image.publish(bridge.cv2_to_imgmsg(img0, "bgr8"))
         if self.update_pointcloud is True:
             self.update_pointcloud = False
@@ -548,8 +548,8 @@ class Camera_subscriber(Node):
                 Img_File_Name = str(self.image_count) + '.jpg'
                 cv2.imwrite(str(self.Image_Path / Img_File_Name), img0)
                 print("SAVE PIC: ", str(self.Image_Path / Img_File_Name))
-            elif key == ord('q'):
-                cv2.destroyAllWindows()
+        elif key == ord('q'):
+            cv2.destroyAllWindows()
             # Python执行外部命令
             # 若是執行外部檔案，需要先給chmod權限才可被執行
             # subprocess.call("/home/james/Documents/justforfun.py --help", shell=True)

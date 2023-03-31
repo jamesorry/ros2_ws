@@ -100,27 +100,26 @@ class KalmanFilter:
         self.kf.correct(measurement)
         # 預測下一個狀態
         predicted_state = self.kf.predict()
-        # 調整測量值以避開障礙物
-        # 檢測預測的座標是否在輪廓內部
-
+        # 調整測量值以避開障礙物,檢測預測的座標是否在輪廓內部
         if cv2.pointPolygonTest(self.max_contour, (int(predicted_state[0]), int(predicted_state[1])), False) >= 0:
             # 如果預測座標在輪廓內部，直接使用預測座標作為更新
-            print("ok")
+            # print("ok")
+            pass
         else:
             # 如果預測座標在輪廓外部，找到最近的輪廓點作為更新
-            print("fail")
+            # print("fail")
             dist = cv2.pointPolygonTest(self.max_contour, (int(
                 predicted_state[0]), int(predicted_state[1])), True)
-            print("dist: ", dist)
+            # print("dist: ", dist)
             if dist != 0:
                 distances = np.sqrt(
                     np.sum((self.max_contour - (int(predicted_state[0]), int(predicted_state[1])))**2, axis=2))
                 min_index = np.argmin(distances)
                 closest_pt = self.max_contour[min_index][0]
                 '''
-                為了找到最近的輪廓點，我們可以先計算所有輪廓點和預測座標之間的歐幾里得距離，然後找到最小距離對應的輪廓點即可。
-                具體來說，我們可以使用numpy庫的sum()函數來計算每個輪廓點和預測座標之間的平方差，
-                然後使用argmin()函數找到最小平方差對應的輪廓點的索引。最後，我們可以使用該索引來獲取最近的輪廓點。
+                為了找到最近的輪廓點，可先計算所有輪廓點和預測座標之間的歐幾里得距離，然後找到最小距離對應的輪廓點。
+                使用numpy庫的sum()函數來計算每個輪廓點和預測座標之間的平方差，
+                然後使用argmin()函數找到最小平方差對應的輪廓點的索引。最後，使用該索引來獲取最近的輪廓點。
                 '''
                 measurement = np.array(
                     [[closest_pt[0]], [closest_pt[1]]], np.float32)

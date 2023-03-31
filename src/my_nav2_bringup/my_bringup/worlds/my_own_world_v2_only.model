@@ -21,7 +21,7 @@
       </animation>
       <script>
         <loop>true</loop>
-        <delay_start>55.00</delay_start>
+        <delay_start>50.00</delay_start>
         <auto_start>true</auto_start>
         <trajectory id="0" type="walk" tension="0.6">
           <!-- <waypoint>
@@ -70,16 +70,38 @@
           </waypoint>
           <waypoint>
             <time>15</time>
-            <pose>-8.0 -8.0 0.0 0.0 0.0 0.0</pose>
+            <pose>-8.0 -8.0 0.0 0.0 0.0 2.355</pose>
           </waypoint>
           <waypoint>
             <time>20</time>
             <pose>-8.0 -8.0 0.0 0.0 0.0 1.57</pose>
           </waypoint>
           <waypoint>
+            <time>23</time>
+            <pose>-8.0 -8.0 0.0 0.0 0.0 0.785</pose>
+          </waypoint>
+          <!-- ! 測試用  -->
+          <!-- <waypoint>
+            <time>25</time>
+            <pose>-8.0 -8.0 0.0 0.0 0.0 0.0</pose>
+          </waypoint>
+          <waypoint>
+            <time>35</time>
+            <pose>-6.0 -8.0 0.0 0.0 0.0 0.0</pose>
+          </waypoint>
+          <waypoint>
+            <time>50</time>
+            <pose>2.0 -8.0 0.0 0.0 0.0 0.0</pose>
+          </waypoint>
+          <waypoint>
+            <time>55</time>
+            <pose>2.0 -8.0 0.0 0.0 0.0 2.355</pose>
+          </waypoint> -->
+          <!-- ! 測試用  -->
+          <!-- <waypoint>
             <time>25</time>
             <pose>-8.0 -6.0 0.0 0.0 0.0 1.57</pose>
-          </waypoint>
+          </waypoint> -->
           <waypoint>
             <time>50</time>
             <pose>-8.0 8.0 0.0 0.0 0.0 1.57</pose>

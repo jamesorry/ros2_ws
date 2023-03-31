@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from enum import Enum
+from action_msgs.msg import GoalStatus
 from my_robot_interfaces.action import ObjectTrack
 from rclpy.action import ActionClient
 from collections import deque
@@ -19,6 +21,14 @@ bridge = CvBridge()
 # use oop
 # Load Kalman filter to predict the trajectory
 kf = KalmanFilter()
+
+
+class FollowStatusMSG(Enum):
+    NONE = ""
+    CANCEL = 'Cancel'
+    CANCEL_ERROR = 'Cancel Error'
+    FOLLOWING = 'Following'
+    MISSING = 'Missing'
 
 
 def quaternion_to_euler_angles(x, y, z, w):
@@ -105,8 +115,107 @@ class MyNode(Node):
 
         self.coordinates = deque(maxlen=20)  # 创建一个队列，并指定最大长度为10
 
+        # ! 添加ActionClient
         self._action_client_follow = ActionClient(
             self, ObjectTrack, "/robot1/object_track")
+        self.follow_target_name = "walker"
+
+    # ! =========================================================================
+    # follow controller
+
+    def follow_controller_update(self, target_name: String):
+        # ! 更新跟隨目標名稱
+       # // choose_index = self.ui.tableWidget_robot1.currentRow()
+        # //print("choose_index: ", choose_index)
+        # //self.follow_target_name = self.ui.tableWidget_robot1.item(
+        # //    choose_index, 0).text()
+        self.follow_target_name = target_name
+        print("target_name: ", self.follow_target_name)
+        # //self.ui.label_follow_object_target.setText(self.follow_target_name)
+        # //self.ui.pushButton_follow_start.setEnabled(True)
+
+    def follow_controller_cancel(self):
+        # ! 取消跟隨目標
+        self.get_logger().info('Canceling follow goal')
+        self.follow_status_msg = FollowStatusMSG.CANCEL
+        self.follow_trigger = False
+        # //self.ui.pushButton_follow_cancel.setEnabled(False)
+        # //self.ui.pushButton_follow_start.setEnabled(False)
+        # Cancel the goal
+        future = self._follow_goal_handle.cancel_goal_async()
+        future.add_done_callback(self.follow_cancel_done)
+
+    def follow_cancel_done(self, future):
+        # ! 取消完成
+        cancel_response = future.result()
+        print("cancel_response: ", cancel_response)
+        if len(cancel_response.goals_canceling) > 0:
+            self.follow_status_msg = FollowStatusMSG.CANCEL
+            self.get_logger().info('Follow Goal successfully canceled')
+            # self.ui.label_follow_status.setText("Cancel")
+        else:
+            self.follow_status_msg = FollowStatusMSG.CANCEL_ERROR
+            self.get_logger().info('Follow Goal failed to cancel')
+            # self.ui.label_follow_status.setText("Cancel error")
+
+    def follow_controller_start_follow(self):
+        # ! 觸發開始跟隨目標
+        self.get_logger().info('Waiting for action server...')
+        self._action_client_follow.wait_for_server()
+
+        goal_msg = ObjectTrack.Goal()
+        goal_msg.object_name = self.follow_target_name  # 此處填入須要跟隨的目標名稱（需為YOLO辨識結果中的）
+        self.get_logger().info(
+            'follow target name: {0}'.format(goal_msg.object_name))
+
+        self.get_logger().info('Sending follow goal request...')
+        self.follow_trigger = True
+        self._follow_send_goal_future = self._action_client_follow.send_goal_async(
+            goal_msg,
+            feedback_callback=self.follow_feedback_callback)
+
+        self._follow_send_goal_future.add_done_callback(
+            self.follow_goal_response_callback)
+
+    def follow_feedback_callback(self, feedback_msg):
+        # ! 獲取當前跟隨狀態
+        feedback = feedback_msg.feedback
+        if feedback.status == 1 and self.follow_trigger:
+            self.follow_status_msg = FollowStatusMSG.FOLLOWING
+        if feedback.status == 0 and self.follow_trigger:
+            self.follow_status_msg = FollowStatusMSG.MISSING
+        # self.get_logger().info('Received feedback(elapsed_time): {0}'.format(feedback.elapsed_time))
+        # self.get_logger().info('Received feedback(status): {0}'.format(feedback.status))
+
+    def follow_goal_response_callback(self, future):
+        # ! server接收"開始"完成
+        goal_handle = future.result()
+        if not goal_handle.accepted:
+            self.get_logger().info('Follow Goal rejected :(')
+            return
+        self._follow_goal_handle = goal_handle
+        # //self.ui.pushButton_follow_cancel.setEnabled(True)
+        self.get_logger().info('Follow Goal accepted :)')
+        self._follow_get_result_future = self._follow_goal_handle.get_result_async()
+        self._follow_get_result_future.add_done_callback(
+            self.follow_get_result_callback)
+
+    def follow_get_result_callback(self, future):
+        # ! server接收完成狀態
+        result = future.result().result
+        status = future.result().status
+        print('follow result: ', result)
+        print('follow status: ', status)
+        if status == GoalStatus.STATUS_SUCCEEDED:
+            self.get_logger().info('Follow succeeded! ')
+        elif status == GoalStatus.STATUS_CANCELED:
+            self.get_logger().info('Follow canceled! ')
+            self.follow_status_msg = FollowStatusMSG.CANCEL
+            # //self.ui.label_follow_status.setText("Cancel")
+        else:
+            self.get_logger().info(
+                'Follow failed with status: {0}'.format(status))
+    # ! =========================================================================
 
     def timer_callback(self):
         self.pose_to_pixel_map()
@@ -187,6 +296,8 @@ class MyNode(Node):
                 self.last_distance = score.center_dist
             else:
                 if True:
+                    print("get into True================")
+                    # 判斷到兩個不同的id，會出現兩個座標，所以會導致路線亂掉
                     self.yolo_result_robot1["class_id"].append(score.class_id)
                     self.yolo_result_robot1["probability"].append(
                         score.probability)
@@ -290,58 +401,61 @@ class MyNode(Node):
             #                (0, 100, 100), markerType=2, markerSize=3)
 
             # ! 繪製雷射掃描的角度與距離
-            for i in range(len(self.laser_ranges.ranges)):
-                degree = i * self.laser_ranges.angle_increment * 180 / 3.14159
-                distance = self.laser_ranges.ranges[i]
-                if not math.isinf(distance):
-                    another_center = self.get_another_point(float(
-                        self.robot_1_position['x']), -1.0*float(self.robot_1_position['y']), (float(degree+self.robot_1_euler_angles['yaw'])), distance)
-                    another_center_x = self.pose_to_pixel_cell(
-                        float(another_center[0]), self.map_center_pixel_x)
-                    another_center_y = self.pose_to_pixel_cell(
-                        -1.0*float(another_center[1]), self.map_center_pixel_y)
-                    another_center_point = (int(another_center_x*1.0),
-                                            int(another_center_y*(1.0)))
-                    if (degree > 0.0 and degree < 90.0) or (degree > 270.0 and degree < 360.0):
-                        cv2.circle(map, another_center_point,
-                                   3, (10, 10, 255), -1)
-                    else:
-                        cv2.circle(map, another_center_point,
-                                   3, (0, 255, 255), -1)
-
-            for pos in self.yolo_result_robot1["position"]:
+            try:
+                for i in range(len(self.laser_ranges.ranges)):
+                    degree = i * self.laser_ranges.angle_increment * 180 / 3.14159
+                    distance = self.laser_ranges.ranges[i]
+                    if not math.isinf(distance):
+                        another_center = self.get_another_point(float(
+                            self.robot_1_position['x']), -1.0*float(self.robot_1_position['y']), (float(degree+self.robot_1_euler_angles['yaw'])), distance)
+                        another_center_x = self.pose_to_pixel_cell(
+                            float(another_center[0]), self.map_center_pixel_x)
+                        another_center_y = self.pose_to_pixel_cell(
+                            -1.0*float(another_center[1]), self.map_center_pixel_y)
+                        another_center_point = (int(another_center_x*1.0),
+                                                int(another_center_y*(1.0)))
+                        if (degree > 0.0 and degree < 90.0) or (degree > 270.0 and degree < 360.0):
+                            cv2.circle(map, another_center_point,
+                                    3, (10, 10, 255), -1)
+                        else:
+                            cv2.circle(map, another_center_point,
+                                    3, (0, 255, 255), -1)
+            except:
+                pass
+            for i, pos in enumerate(self.yolo_result_robot1["position"]):
                 # print("pos: ", pos)
-                kf.init()
-                another_center_x = self.pose_to_pixel_cell(
-                    float(pos[0]), self.map_center_pixel_x)
-                another_center_y = self.pose_to_pixel_cell(
-                    -1.0*float(pos[1]), self.map_center_pixel_y)
-                if not math.isinf(another_center_x) and not math.isinf(another_center_y) and not math.isnan(another_center_x) and not math.isnan(another_center_y):
-                    another_center_point = (int(another_center_x*1.0),
-                                            int(another_center_y*(1.0)))
-                    # ! 印出目標物的座標
-                    self.__points.append(another_center_point)
-                    cv2.drawMarker(map, another_center_point,
-                                   (0, 0, 199), markerType=2, markerSize=5)
-                    # self.predicted = kf.predict(
-                    #     another_center_x, another_center_y)
-                    # 将包含x和y坐标的元组添加到队列的右侧
-                    self.coordinates.append(another_center_point)
-                    for pt in self.coordinates:
-                        # self.predicted = kf.predict_avoid_obstacle(pt[0], pt[1])
-                        self.predicted = kf.predict(pt[0], pt[1])
-                    #!印出預測的下一個座標(圓形)
-                    # print("another_center_point: ", another_center_point)
-                    # print("self.predicted: ", self.predicted)
-                    cv2.circle(map, self.predicted, 3, (255, 255, 0), 1)
-                    predicted = self.predicted
-                    #!印出未來5筆預測的座標(圓形)
-                    for i in range(5):
-                        predicted = kf.predict_avoid_obstacle(
-                            predicted[0], predicted[1])
-                        # predicted = kf.predict(predicted[0], predicted[1])
-                        cv2.circle(map, predicted, 3, (200, 220, 100), 1)
-                        # print("predicted: ", predicted)
+                if(self.yolo_result_robot1["class_id"][i] == self.follow_target_name):
+                    kf.init()
+                    another_center_x = self.pose_to_pixel_cell(
+                        float(pos[0]), self.map_center_pixel_x)
+                    another_center_y = self.pose_to_pixel_cell(
+                        -1.0*float(pos[1]), self.map_center_pixel_y)
+                    if not math.isinf(another_center_x) and not math.isinf(another_center_y) and not math.isnan(another_center_x) and not math.isnan(another_center_y):
+                        another_center_point = (int(another_center_x*1.0),
+                                                int(another_center_y*(1.0)))
+                        # ! 印出目標物的座標
+                        self.__points.append(another_center_point)
+                        cv2.drawMarker(map, another_center_point,
+                                    (0, 0, 199), markerType=2, markerSize=5)
+                        # self.predicted = kf.predict(
+                        #     another_center_x, another_center_y)
+                        # 将包含x和y坐标的元组添加到队列的右侧
+                        self.coordinates.append(another_center_point)
+                        for pt in self.coordinates:
+                            # self.predicted = kf.predict_avoid_obstacle(pt[0], pt[1])
+                            self.predicted = kf.predict(pt[0], pt[1])
+                        #!印出預測的下一個座標(圓形)
+                        # print("another_center_point: ", another_center_point)
+                        # print("self.predicted: ", self.predicted)
+                        cv2.circle(map, self.predicted, 3, (255, 255, 0), 1)
+                        predicted = self.predicted
+                        #!印出未來5筆預測的座標(圓形)
+                        for i in range(5):
+                            predicted = kf.predict_avoid_obstacle(
+                                predicted[0], predicted[1])
+                            # predicted = kf.predict(predicted[0], predicted[1])
+                            cv2.circle(map, predicted, 3, (200, 220, 100), 1)
+                            # print("predicted: ", predicted)
 
             #!印出目標物移動軌跡(線段)
             if len(self.__points) > 1:
@@ -360,11 +474,16 @@ class MyNode(Node):
                      int(2.0 * self.origin_height))
             dst = cv2.resize(map, dsize)
             cv2.imshow('my_test_img_map', dst)
-            key = cv2.waitKey(100)
+            key = cv2.waitKey(1)
             if key == 27:
                 self.__points.clear()
                 kf.init()
                 self.print_debug_msg()
+            elif key == ord('s'):
+                self.follow_controller_update("walker")
+                self.follow_controller_start_follow()
+            elif key == ord('q'):
+                self.follow_controller_cancel()
             # loop_time = int((time.time()-start) * 1000)
             # print("loop time(ms): ", loop_time)
 

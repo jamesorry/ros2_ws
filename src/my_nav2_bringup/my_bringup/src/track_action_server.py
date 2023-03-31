@@ -10,13 +10,16 @@ from my_robot_interfaces.action import ObjectTrack
 from rclpy.action import ActionServer, CancelResponse, GoalResponse
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.executors import MultiThreadedExecutor
-from my_robot_interfaces.msg import BoundingBoxes, BoundingBox, BoundingBoxesV2
+from my_robot_interfaces.msg import BoundingBoxes, BoundingBox, BoundingBoxesV2, CurvePIDarray, CurvePID
 import sensor_msgs_py.point_cloud2 as point_cloud2
 from sensor_msgs.msg import Image, PointCloud2
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import Image, CompressedImage
 import argparse
 from enum import IntEnum
+import matplotlib.pyplot as plt
+from collections import deque
+from builtin_interfaces.msg import Time
 
 ENABLE = True
 DISABLE = False
@@ -59,9 +62,14 @@ class TrackActionServer(Node):
         self.class_id_list = ["", "", "", "", "", "", "", "", ""]
         __sub_bounding_boxes_name = "/" + self.args.robot_name + "/yolov5/bounding_boxes"
         self.sub_bounding_boxes = self.create_subscription(
-            BoundingBoxesV2, __sub_bounding_boxes_name, self.get_robot_yolo_data, 10)
+            BoundingBoxesV2, __sub_bounding_boxes_name, self.get_robot_yolo_data, 20)
 
     def get_robot_yolo_data(self, data: BoundingBoxesV2):
+        # ! 獲取運行時間
+        # timestamp = data.header.stamp.sec + data.header.stamp.nanosec / 1e9
+        # ms = data.header.stamp.nanosec / 1000000  # 獲取毫秒數
+        # time_str = time.strftime('%H:%M:%S', time.gmtime(timestamp)) + f".{ms}"
+        # print(f"Timestamp: {time_str}")
         self.boundbox_list_num = data.bounding_num
         # print("boundbox_list_num: ", self.boundbox_list_num)
         for i in range(0, self.boundbox_list_num):
@@ -81,22 +89,30 @@ class TrackActionServer(Node):
     def init_pid(self):
         self.target_center_pixel = (0, 0)
         self.target_center_distance = 0.0
-        self.pid_kp = [self.args.PID_Kp, self.args.PID_Kp]
-        self.pid_ki = [self.args.PID_Ki, self.args.PID_Ki]
-        self.pid_kd = [self.args.PID_Kd, self.args.PID_Kd]
+        self.pid_kp = [1.3, 1.5]
+        self.pid_ki = [0.01, 0.01]
+        self.pid_kd = [1.5, 1.5]
+        # self.pid_kp = [self.args.PID_Kp, self.args.PID_Kp]
+        # self.pid_ki = [self.args.PID_Ki, self.args.PID_Ki]
+        # self.pid_kd = [self.args.PID_Kd, self.args.PID_Kd]
         self.pid_feedback = [0.0, 0.0]
         self.pid = PID(self.pid_kp, self.pid_ki, self.pid_kd)
-        self.pid.SetPoint = [float(640/2), 1.0]  # 目標量[畫面中心點（X）, 物體距離(m)]
-        self.pid.setSampleTime(0.05)
+        self.pid.last_time = self.get_clock().now()
+        self.pid.SetPoint = [float(640/2), 1.2]  # 目標量[畫面中心點（X）, 物體距離(m)]
+        self.pid.setSampleTime(0.01)
         __twist_topic_name = "/" + self.args.robot_name + "/cmd_vel"
         print("__twist_topic_name: ", __twist_topic_name)
         self._publisher_twist_robot1 = self.create_publisher(
             Twist, __twist_topic_name, 10)
         self.control_PID_loop_timer_ = self.create_timer(
-            0.05, self.control_PID_loop)
+            0.01, self.control_PID_loop)
         self.control_PID_loop_run = DISABLE
         self.boundbox_list_num = 0
         self.PID_Control_Status = PID_Control_Status.MISSING
+        
+        __pid_curve_topic_name = "/pid_curve"
+        self._publisher_pid_curve = self.create_publisher(
+            CurvePIDarray, __pid_curve_topic_name, 20)
 
     def x_linear_map(self, x, in_min, in_max, out_min, out_max):
         return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
@@ -111,26 +127,26 @@ class TrackActionServer(Node):
 
         if self.pid_kp[0] != 0:
             z_angular = self.z_angular_map(
-                z_angular, -320.0 * self.pid_kp[0], 320.0 * self.pid_kp[0], -0.18, 0.18)  # 旋轉
+                z_angular, -320.0 * self.pid_kp[0], 320.0 * self.pid_kp[0], -0.23, 0.23)  # 旋轉
         # print("z_angular: ", z_angular)
 
         if self.pid_kp[1] != 0:
             x_linear = self.x_linear_map(
-                x_linear, -1.0 * self.pid_kp[1], 1.0 * self.pid_kp[1], 0.18, -0.18)  # 前進後退
+                x_linear, -1.0 * self.pid_kp[1], 1.0 * self.pid_kp[1], 0.25, -0.35)  # 前進後退
         # print("x_linear: ", x_linear)
         # print("===============================")
         # 限制速度
-        if x_linear > 0.5:
+        if x_linear > 0.9:
             x_linear = 0.0
-        if x_linear < -0.5:
+        if x_linear < -1.5:
             x_linear = -0.0
         if math.isnan(x_linear) or math.isinf(x_linear):
             x_linear = 0.0
             self.pid.ITerm[1] = 0.0
 
-        if z_angular > 0.2:
+        if z_angular > 0.5:
             z_angular = 0.0
-        if z_angular < -0.2:
+        if z_angular < -0.5:
             z_angular = -0.0
         if math.isnan(z_angular) or math.isinf(z_angular):
             z_angular = 0.0
@@ -156,13 +172,37 @@ class TrackActionServer(Node):
         twist.angular.z = z_angular
         self._publisher_twist_robot1.publish(twist)
 
+    def init_twist_robot1(self):
+        if (self._publisher_twist_robot1 is None):
+            return
+        twist = Twist()
+        twist.linear.x = 0.0
+        twist.linear.y = 0.0
+        twist.linear.z = 0.0
+        twist.angular.x = 0.0
+        twist.angular.y = 0.0
+        twist.angular.z = 0.0
+        self._publisher_twist_robot1.publish(twist)
+
+    def publish_PID_Curve(self, process_variable, output, current_time):
+        msg_array = CurvePIDarray()
+        for i in range(2):
+            msg = CurvePID()
+            msg.time_stamp = current_time
+            msg.line_feedback_value = process_variable[i]
+            msg.line_output = output[i]
+            msg_array.curvepid.append(msg)
+        self._publisher_pid_curve.publish(msg_array)
+
     def control_PID_loop(self):
         if self.control_PID_loop_run is ENABLE:
             if self.boundbox_list_num > 0:
+                now_time = self.get_clock().now()
                 self.pid_feedback = [
                     float(self.target_center_pixel[0]), self.target_center_distance]
-                self.pid.update(self.pid_feedback)
+                self.pid.update(self.pid_feedback, now_time)
                 output = self.pid.output
+                self.publish_PID_Curve(self.pid_feedback, output, now_time.to_msg())
                 # print("pid_feedback: ", self.pid_feedback)
                 # print("target_center_pixel: ", self.target_center_pixel)
                 # print("output: ", output)
@@ -171,10 +211,12 @@ class TrackActionServer(Node):
             else:
                 self.PID_Control_Status = PID_Control_Status.MISSING
                 self.pid.ITerm = [0.0, 0.0]
-                if self.target_center_pixel[0] <= 320:
-                    self.self_rotate(0.08, 0.0)
-                elif self.target_center_pixel[0] > 320:
-                    self.self_rotate(-0.08, 0.0)
+                self.init_twist_robot1()
+                print("Target Missing!!!")
+                # if self.target_center_pixel[0] <= 320:
+                #     self.self_rotate(0.08, 0.0)
+                # elif self.target_center_pixel[0] > 320:
+                #     self.self_rotate(-0.08, 0.0)
 
     def destroy(self):
         self._action_server.destroy()
@@ -252,6 +294,8 @@ class TrackActionServer(Node):
 
         return result
 
+#! cancel 機器人不會停下來......
+
 
 def main(args=None):
     rclpy.init(args=args)
@@ -259,6 +303,8 @@ def main(args=None):
     action_server = TrackActionServer()
 
     # We use a MultiThreadedExecutor to handle incoming goal requests concurrently
+    # https://blog.csdn.net/liuerin/article/details/108749596
+    # 多線程調用callback funcs ， cancel action
     executor = MultiThreadedExecutor()
     rclpy.spin(action_server, executor=executor)
 
