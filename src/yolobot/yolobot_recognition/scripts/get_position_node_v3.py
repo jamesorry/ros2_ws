@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-from enum import Enum
+from enum import Enum, auto
 from action_msgs.msg import GoalStatus
 from my_robot_interfaces.action import ObjectTrack
 from rclpy.action import ActionClient
+from nav2_msgs.action import NavigateToPose
 from collections import deque
 import time
 from kalmanfilter import KalmanFilter
@@ -29,6 +30,14 @@ class FollowStatusMSG(Enum):
     CANCEL_ERROR = 'Cancel Error'
     FOLLOWING = 'Following'
     MISSING = 'Missing'
+
+
+class StateMachineStatus(Enum):
+    Idle = auto()
+    Target_Missing = auto()
+    CANCEL_ERROR = auto()
+    FOLLOWING = auto()
+    MISSING = auto()
 
 
 def quaternion_to_euler_angles(x, y, z, w):
@@ -103,7 +112,7 @@ class MyNode(Node):
         self.sub_map_image = self.create_subscription(
             SendMapImage, '/SendMapImageIng', self.loadImage, 10)
         self.sub_map_image
-        self.create_timer(0.5, self.timer_callback)
+        self.create_timer(0.2, self.timer_callback)
         self.now_distance = 0.0
         self.last_distance = 0.0
         self.__points = deque(maxlen=200)
@@ -113,16 +122,116 @@ class MyNode(Node):
             LaserScan, '/robot1/scan', self.scan_callback, 10)
         self.laser_subscription
 
-        self.coordinates = deque(maxlen=20)  # 创建一个队列，并指定最大长度为10
+        self.coordinates = deque(maxlen=20)  # 创建一个队列，并指定最大长度
 
         # ! 添加ActionClient
         self._action_client_follow = ActionClient(
             self, ObjectTrack, "/robot1/object_track")
         self.follow_target_name = "walker"
+        self.follow_status_msg = FollowStatusMSG.NONE
+
+        # ! 添加nav2
+        self._action_client_robot1 = ActionClient(
+            self, NavigateToPose, "/robot1/navigate_to_pose")
+        self.future_predicted_maxlen = 10
+        self.future_predicted = deque(
+            maxlen=self.future_predicted_maxlen)  # 创建一个队列，并指定最大长度
+        # 狀態機狀態初始化
+        self.state = StateMachineStatus.Idle
+    # ! =========================================================================
+    # *nav2 controller
+
+    def goal_response_robot1_callback(self, future):
+        self.robot1_goal_handle = future.result()
+        if self.robot1_goal_handle.accepted == False:
+            print("Goal Rejected")
+            return None
+        # //self.ui.label_target_status_robot1.setText("Goal Accepted")
+        self._get_result_future = self.robot1_goal_handle.get_result_async()
+        self._get_result_future.add_done_callback(
+            self.get_result_robot1_callback)
+
+    def get_result_robot1_callback(self, future):
+        result = future.result().result
+        status = future.result().status
+        print('robot1 result: ', result)
+        print('robot1 status: ', status)
+
+        # // x = self.__pixel_cell_to_pose(
+        # //     self.mouse_target['robot1'][0], self.map_center_pixel_x)
+        # // y = self.__pixel_cell_to_pose(
+        # //     self.mouse_target['robot1'][1], self.map_center_pixel_y)
+        # // theta = float(self.ui.lineEdit_robot1_target_theta.text())
+
+        if status == GoalStatus.STATUS_SUCCEEDED:
+            self.get_logger().info('Navigation robot1 succeeded! ')
+            # //self.ui.label_target_status_robot1.setText("Goal Finish")
+        elif status == GoalStatus.STATUS_CANCELED:
+            self.get_logger().info('Navigation robot1 canceled! ')
+            # //self.ui.label_target_status_robot1.setText("Goal Canceled")
+        else:
+            self.get_logger().info(
+                'Navigation robot1 failed with status: {0}'.format(status))
+
+        # 設定誤差值，在以下誤差值以內則顯示Goal Finish
+        # // if (self.robot_1_position['x']-0.5) <= x and (self.robot_1_position['x']+0.5) >= x:
+        # //     if (self.robot_1_position['y']-0.5) <= y and (self.robot_1_position['y']+0.5) >= y:
+        # //         if (self.robot_1_euler_angles['yaw']-4) <= theta and (self.robot_1_euler_angles['yaw']+4) >= theta:
+        # //             self.ui.label_target_status_robot1.setText("Goal Finish")
+
+    def cancel_robot1_goal(self):
+        self.get_logger().info('robot1 canceling goal')
+        future = self.robot1_goal_handle.cancel_goal_async()
+        future.add_done_callback(self.goal_canceled_robot1_callback)
+
+    def goal_canceled_robot1_callback(self, future):
+        cancel_response = future.result()
+        if len(cancel_response.goals_canceling) > 0:
+            self.get_logger().info('Cancelling of robot1 goal complete')
+        else:
+            self.get_logger().warning('Goal robot1 failed to cancel')
+
+    def feedback_robot1_callback(self, feedback_msg):
+        feedback = feedback_msg.feedback
+
+    def publish_robot_position_target(self, x, y, theta):
+        # * 需要給xy座標以及選轉角度
+        theta = theta - 0
+        if theta > 360:
+            theta = theta - 360
+        elif theta < 0:
+            theta = theta + 360
+        print("=================================")
+        print("x: ", float(x))
+        print("y: ", float(y))
+        print("theta: ", theta)
+        print("=================================")
+        result = self.handle_action_rpy_to_quaternion(
+            float(x), float(y), theta)
+        self._action_client_robot1.wait_for_server()
+        self._send_goal_future_robot1 = self._action_client_robot1.send_goal_async(
+            result, feedback_callback=self.feedback_robot1_callback)
+        self._send_goal_future_robot1.add_done_callback(
+            self.goal_response_robot1_callback)
+
+    def handle_action_rpy_to_quaternion(self, x, y, theta):
+        t = NavigateToPose.Goal()
+        t.pose.header.stamp = self.get_clock().now().to_msg()
+
+        t.pose.pose.position.x = x
+        t.pose.pose.position.y = -1.0*y
+        t.pose.pose.position.z = 0.0
+        # theta to radin
+        radin = theta * math.pi / 180.0
+        q = quaternion_from_euler(0, 0, radin)
+        t.pose.pose.orientation.x = q[0]
+        t.pose.pose.orientation.y = q[1]
+        t.pose.pose.orientation.z = q[2]
+        t.pose.pose.orientation.w = q[3]
+        return t
 
     # ! =========================================================================
-    # follow controller
-
+    # *follow controller
     def follow_controller_update(self, target_name: String):
         # ! 更新跟隨目標名稱
        # // choose_index = self.ui.tableWidget_robot1.currentRow()
@@ -142,8 +251,11 @@ class MyNode(Node):
         # //self.ui.pushButton_follow_cancel.setEnabled(False)
         # //self.ui.pushButton_follow_start.setEnabled(False)
         # Cancel the goal
-        future = self._follow_goal_handle.cancel_goal_async()
-        future.add_done_callback(self.follow_cancel_done)
+        try:
+            future = self._follow_goal_handle.cancel_goal_async()
+            future.add_done_callback(self.follow_cancel_done)
+        except:
+            pass
 
     def follow_cancel_done(self, future):
         # ! 取消完成
@@ -184,8 +296,11 @@ class MyNode(Node):
             self.follow_status_msg = FollowStatusMSG.FOLLOWING
         if feedback.status == 0 and self.follow_trigger:
             self.follow_status_msg = FollowStatusMSG.MISSING
-        # self.get_logger().info('Received feedback(elapsed_time): {0}'.format(feedback.elapsed_time))
-        # self.get_logger().info('Received feedback(status): {0}'.format(feedback.status))
+        self.follow_elapsed_time = feedback.elapsed_time
+        # self.get_logger().info(
+        #     'Received feedback(elapsed_time): {0}'.format(feedback.elapsed_time))
+        # self.get_logger().info(
+        #     'Received feedback(status): {0}'.format(feedback.status))
 
     def follow_goal_response_callback(self, future):
         # ! server接收"開始"完成
@@ -354,6 +469,8 @@ class MyNode(Node):
                                        (self.origin_width + self.fix_map_center_pixel_x))
             self.map_center_pixel_y = (
                 (self.origin_height + self.fix_map_center_pixel_y))
+            print("self.map_center_pixel_x: ", self.map_center_pixel_x)
+            print("self.map_center_pixel_y: ", self.map_center_pixel_y)
 
     def scan_callback(self, msg: LaserScan):
         self.laser_ranges = msg
@@ -416,10 +533,10 @@ class MyNode(Node):
                                                 int(another_center_y*(1.0)))
                         if (degree > 0.0 and degree < 90.0) or (degree > 270.0 and degree < 360.0):
                             cv2.circle(map, another_center_point,
-                                    3, (10, 10, 255), -1)
+                                       3, (10, 10, 255), -1)
                         else:
                             cv2.circle(map, another_center_point,
-                                    3, (0, 255, 255), -1)
+                                       3, (0, 255, 255), -1)
             except:
                 pass
             for i, pos in enumerate(self.yolo_result_robot1["position"]):
@@ -436,7 +553,7 @@ class MyNode(Node):
                         # ! 印出目標物的座標
                         self.__points.append(another_center_point)
                         cv2.drawMarker(map, another_center_point,
-                                    (0, 0, 199), markerType=2, markerSize=5)
+                                       (0, 0, 199), markerType=2, markerSize=5)
                         # self.predicted = kf.predict(
                         #     another_center_x, another_center_y)
                         # 将包含x和y坐标的元组添加到队列的右侧
@@ -447,22 +564,33 @@ class MyNode(Node):
                         #!印出預測的下一個座標(圓形)
                         # print("another_center_point: ", another_center_point)
                         # print("self.predicted: ", self.predicted)
-                        cv2.circle(map, self.predicted, 3, (255, 255, 0), 1)
+                        cv2.circle(map, self.predicted, 3, (255, 255, 0), -1)
                         predicted = self.predicted
                         #!印出未來5筆預測的座標(圓形)
-                        for i in range(5):
+                        for i in range(self.future_predicted_maxlen):
                             predicted = kf.predict_avoid_obstacle(
                                 predicted[0], predicted[1])
+                            self.future_predicted.append(predicted)
                             # predicted = kf.predict(predicted[0], predicted[1])
                             cv2.circle(map, predicted, 3, (200, 220, 100), 1)
                             # print("predicted: ", predicted)
 
+                        self.predicted_final_pos, self.predicted_final_degree = self.two_pos_get_degree(
+                            self.future_predicted[0], self.future_predicted[self.future_predicted_maxlen-1])
+                        print("future_predicted: ",
+                              self.future_predicted)
+                        print("predicted_final_pos: ",
+                              self.predicted_final_pos)
+                        print("predicted_final_degree: ",
+                              self.predicted_final_degree)
+
             #!印出目標物移動軌跡(線段)
             if len(self.__points) > 1:
+                pass
                 #! 只畫出線
-                for i in range(len(self.__points) - 1):
-                    cv2.line(
-                        map, self.__points[i], self.__points[i+1], color=(255, 0, 0), thickness=1)
+                # for i in range(len(self.__points) - 1):
+                #     cv2.line(
+                #         map, self.__points[i], self.__points[i+1], color=(255, 0, 0), thickness=1)
                 #! 只畫出圓圈
                 # for i in range(len(self.__points)):
                 #     cv2.circle(
@@ -484,11 +612,59 @@ class MyNode(Node):
                 self.follow_controller_start_follow()
             elif key == ord('q'):
                 self.follow_controller_cancel()
+                self.publish_robot_position_target(
+                    self.predicted_final_pos[0], self.predicted_final_pos[1], self.predicted_final_degree)
+            elif key == ord('z'):
+                self.publish_robot_position_target(0, 0, 0)
+            elif key == ord('c'):
+                self.cancel_robot1_goal()
             # loop_time = int((time.time()-start) * 1000)
             # print("loop time(ms): ", loop_time)
+            self.state_machine_proc()
 
     def print_debug_msg(self):
         print(self.yolo_result_robot1["position"])
+        print("follow_status_msg:", self.follow_status_msg)
+        print("follow_elapsed_time:", self.follow_elapsed_time)
+
+    def state_machine_proc(self):
+        if self.state == StateMachineStatus.Idle:
+            # print("Idle state")
+            self.state = StateMachineStatus.Target_Missing
+
+        elif self.state == StateMachineStatus.Target_Missing:
+            # print("Target_Missing state")
+            self.state = StateMachineStatus.Idle
+
+    def two_pos_get_degree(self, pos1=(0.0, 0.0), pos2=(0.0, 0.0)):
+        # * 二維座標求角度
+        # 兩個座標
+        x1, y1 = pos1[0], pos1[1]
+        x2, y2 = pos2[0], pos2[1]
+
+        x1 = self.pixel_cell_to_pose(x1, self.map_center_pixel_x)
+        y1 = self.pixel_cell_to_pose(y1, self.map_center_pixel_y)
+
+        x2 = self.pixel_cell_to_pose(x2, self.map_center_pixel_x)
+        y2 = self.pixel_cell_to_pose(y2, self.map_center_pixel_y)
+
+        # 計算位置向量的分量
+        dx = x2 - x1
+        dy = y2 - y1
+
+        '''
+        当点(x, y) 落入第一象限时，atan2(y, x)的范围是 0 ~ pi/2;
+        当点(x, y) 落入第二象限时，atan2(y, x)的范围是 pi/2 ~ pi;
+        当点(x, y) 落入第三象限时，atan2(y, x)的范围是 －pi～－pi/2;
+        当点(x, y) 落入第四象限时，atan2(y, x)的范围是 -pi/2～0;
+        '''
+        # 計算角度(弧度)
+        angle = math.atan2(dy, dx)
+        # print("angle: ", angle)
+        # 轉換度數表示
+        degree = (angle * 180 / math.pi) * (-1) # ! 因為是從pixel 轉換回來的 所以需要從乘上 (-1) 角度才會正確
+        # print("degree: ", degree)
+        return (x1, y1), degree
 
 
 def main(args=None):

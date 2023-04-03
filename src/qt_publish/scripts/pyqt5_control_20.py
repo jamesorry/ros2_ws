@@ -600,13 +600,13 @@ class MainWindow_controller(QtWidgets.QMainWindow):
                                        }
             self.cancel_robot2_goal()
 
-    def feedback_callback(self, feedback_msg):
+    # def feedback_callback(self, feedback_msg):
         # https://github.com/ros-planning/navigation2/blob/main/nav2_msgs/action/NavigateToPose.action
         # feedback = feedback_msg.feedback
         # print("Received Feedback :" + str(feedback.current_pose))
         # print("Navigation time :" + str(feedback.navigation_time))
         # print("Distance remaining :" + str(feedback.distance_remaining))
-        pass
+        # pass
 
     # https://answers.ros.org/question/361666/ros2-action-goal-canceling-problem/
     # https://www.ncnynl.com/archives/202008/3824.html
@@ -708,7 +708,9 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         else:
             self.node.get_logger().warning('Goal robot2 failed to cancel')
 
-    def feedback_callback(self, feedback_msg):
+    def feedback_robot1_callback(self, feedback_msg):
+        feedback = feedback_msg.feedback
+    def feedback_robot2_callback(self, feedback_msg):
         feedback = feedback_msg.feedback
 
     def publish_robot_position_target(self):
@@ -730,7 +732,7 @@ class MainWindow_controller(QtWidgets.QMainWindow):
             result = self.handle_action_rpy_to_quaternion(x, y, theta)
             self._action_client_robot1.wait_for_server()
             self._send_goal_future_robot1 = self._action_client_robot1.send_goal_async(
-                result, feedback_callback=self.feedback_callback)
+                result, feedback_callback=self.feedback_robot1_callback)
             self._send_goal_future_robot1.add_done_callback(
                 self.goal_response_robot1_callback)
 
@@ -752,7 +754,7 @@ class MainWindow_controller(QtWidgets.QMainWindow):
             result = self.handle_action_rpy_to_quaternion(x, y, theta)
             self._action_client_robot2.wait_for_server()
             self._send_goal_future_robot2 = self._action_client_robot2.send_goal_async(
-                result, feedback_callback=self.feedback_callback)
+                result, feedback_callback=self.feedback_robot2_callback)
             self._send_goal_future_robot2.add_done_callback(
                 self.goal_response_robot2_callback)
     # ===========================================================

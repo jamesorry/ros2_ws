@@ -30,6 +30,18 @@ class PID_Control_Status(IntEnum):
     TRACKING = 1
 
 
+class Robot_Linear_Status(IntEnum):
+    Stop = 0
+    Forward = 1
+    Backward = 2
+
+
+class Robot_Angular_Status(IntEnum):
+    Stop = 0
+    Right = 1
+    Left = 2
+
+
 class TrackActionServer(Node):
     def __init__(self):
         super().__init__('track_action_server')
@@ -62,7 +74,45 @@ class TrackActionServer(Node):
         self.class_id_list = ["", "", "", "", "", "", "", "", ""]
         __sub_bounding_boxes_name = "/" + self.args.robot_name + "/yolov5/bounding_boxes"
         self.sub_bounding_boxes = self.create_subscription(
-            BoundingBoxesV2, __sub_bounding_boxes_name, self.get_robot_yolo_data, 20)
+            BoundingBoxesV2,
+            __sub_bounding_boxes_name,
+            self.get_robot_yolo_data,
+            20
+        )
+        self.robot_linear_status = Robot_Linear_Status.Stop
+        self.robot_angular_status = Robot_Angular_Status.Stop
+        self.cmd_vel_sub = self.create_subscription(
+            Twist,
+            "/cmd_vel",
+            self.cmd_vel_callback,
+            10
+        )
+
+    def cmd_vel_callback(self, msg: Twist):
+        # 可以用來判斷機器人是否移動
+        if self.last_cmd_vel is None:
+            self.last_cmd_vel = msg
+            return
+        if msg.linear.x > 0:
+            self.robot_linear_status = Robot_Linear_Status.Forward
+            # print("Robot is moving forward")
+        elif msg.linear.x < 0:
+            self.robot_linear_status = Robot_Linear_Status.Backward
+            # print("Robot is moving backward")
+        else:
+            self.robot_linear_status = Robot_Linear_Status.Stop
+            # print("Robot is not moving")
+
+        if msg.angular.z > 0:
+            self.robot_angular_status_status = Robot_Angular_Status.Right
+            # print("Robot is turning right")
+        elif msg.angular.z < 0:
+            self.robot_angular_status_status = Robot_Angular_Status.Left
+            # print("Robot is turning left")
+        else:
+            self.robot_angular_status_status = Robot_Angular_Status.Stop
+            # print("Robot is not turning")
+        self.last_cmd_vel = msg
 
     def get_robot_yolo_data(self, data: BoundingBoxesV2):
         # ! 獲取運行時間
@@ -103,16 +153,22 @@ class TrackActionServer(Node):
         __twist_topic_name = "/" + self.args.robot_name + "/cmd_vel"
         print("__twist_topic_name: ", __twist_topic_name)
         self._publisher_twist_robot1 = self.create_publisher(
-            Twist, __twist_topic_name, 10)
+            Twist,
+            __twist_topic_name,
+            10
+        )
         self.control_PID_loop_timer_ = self.create_timer(
             0.01, self.control_PID_loop)
         self.control_PID_loop_run = DISABLE
         self.boundbox_list_num = 0
         self.PID_Control_Status = PID_Control_Status.MISSING
-        
+
         __pid_curve_topic_name = "/pid_curve"
         self._publisher_pid_curve = self.create_publisher(
-            CurvePIDarray, __pid_curve_topic_name, 20)
+            CurvePIDarray,
+            __pid_curve_topic_name,
+            20
+        )
 
     def x_linear_map(self, x, in_min, in_max, out_min, out_max):
         return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
@@ -202,16 +258,18 @@ class TrackActionServer(Node):
                     float(self.target_center_pixel[0]), self.target_center_distance]
                 self.pid.update(self.pid_feedback, now_time)
                 output = self.pid.output
-                self.publish_PID_Curve(self.pid_feedback, output, now_time.to_msg())
+                self.publish_PID_Curve(
+                    self.pid_feedback, output, now_time.to_msg())
                 # print("pid_feedback: ", self.pid_feedback)
                 # print("target_center_pixel: ", self.target_center_pixel)
                 # print("output: ", output)
                 self._send_twist_robot1(output[0], output[1])
                 self.PID_Control_Status = PID_Control_Status.TRACKING
             else:
-                self.PID_Control_Status = PID_Control_Status.MISSING
                 self.pid.ITerm = [0.0, 0.0]
-                self.init_twist_robot1()
+                if self.PID_Control_Status == PID_Control_Status.TRACKING:
+                    self.init_twist_robot1()  # ! 不能一直卡在這裡，會無法控制車子移動(理論上應該只需要觸發一次)
+                self.PID_Control_Status = PID_Control_Status.MISSING
                 print("Target Missing!!!")
                 # if self.target_center_pixel[0] <= 320:
                 #     self.self_rotate(0.08, 0.0)
@@ -243,6 +301,9 @@ class TrackActionServer(Node):
         """Accept or reject a client request to cancel an action."""
         self.get_logger().info('Received cancel request')
         self.control_PID_loop_run = DISABLE
+        # cancel時機器人需停止移動
+        self.pid.ITerm = [0.0, 0.0]
+        self.init_twist_robot1()
         return CancelResponse.ACCEPT
 
     def execute_callback(self, goal_handle):
@@ -279,7 +340,8 @@ class TrackActionServer(Node):
             feedback_msg.elapsed_time = round(time.time()-t1, 2)
             # Publish the feedback
             if self.control_PID_loop_run:
-                if time.time()-feedback_msg.elapsed_time > 1.0:
+                # 約50ms發送一筆publish_feedback(需要確認發送速度是否有辦法達到此50ms)
+                if time.time()-feedback_msg.elapsed_time > 0.1:
                     goal_handle.publish_feedback(feedback_msg)
             # time.sleep(1)
 
@@ -294,7 +356,7 @@ class TrackActionServer(Node):
 
         return result
 
-#! cancel 機器人不會停下來......
+#! cancel 機器人不會停下來......(已修改)
 
 
 def main(args=None):

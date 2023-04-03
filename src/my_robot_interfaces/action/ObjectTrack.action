@@ -1,5 +1,6 @@
 # Goal
 string object_name
+# 應該要在添加一個狀態，用來停止前後移動，或停止旋轉
 ---
 # Result
 bool success
