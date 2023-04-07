@@ -32,9 +32,21 @@ class FollowStatusMSG(Enum):
     MISSING = 'Missing'
 
 
+class NavigationStatusMSG(Enum):
+    NONE = ""
+    CANCEL = 'Cancel'
+    CANCEL_ERROR = 'Cancel Error'
+    SUCCESS = 'Success'
+
+
 class StateMachineStatus(Enum):
     Idle = auto()
+    Target_Following = auto()
     Target_Missing = auto()
+    Target_Missing_Proc = auto()
+    Target_Missing_Nav = auto()
+    Target_Missing_Nav_Check = auto()
+    Target_Pos_Predict_Retry = auto()
     CANCEL_ERROR = auto()
     FOLLOWING = auto()
     MISSING = auto()
@@ -112,7 +124,7 @@ class MyNode(Node):
         self.sub_map_image = self.create_subscription(
             SendMapImage, '/SendMapImageIng', self.loadImage, 10)
         self.sub_map_image
-        self.create_timer(0.2, self.timer_callback)
+        self.create_timer(0.1, self.timer_callback)
         self.now_distance = 0.0
         self.last_distance = 0.0
         self.__points = deque(maxlen=200)
@@ -129,6 +141,7 @@ class MyNode(Node):
             self, ObjectTrack, "/robot1/object_track")
         self.follow_target_name = "walker"
         self.follow_status_msg = FollowStatusMSG.NONE
+        self.follow_elapsed_time = 0.0
 
         # ! 添加nav2
         self._action_client_robot1 = ActionClient(
@@ -137,7 +150,12 @@ class MyNode(Node):
         self.future_predicted = deque(
             maxlen=self.future_predicted_maxlen)  # 创建一个队列，并指定最大长度
         # 狀態機狀態初始化
-        self.state = StateMachineStatus.Idle
+        self.last_state_machine_status = None
+        self.state_machine_status = StateMachineStatus.Idle
+        self.NavStatusMsg = NavigationStatusMSG.NONE
+
+        self.new_data_received = False
+        self.predicted_start_time = time.time()
     # ! =========================================================================
     # *nav2 controller
 
@@ -165,6 +183,7 @@ class MyNode(Node):
 
         if status == GoalStatus.STATUS_SUCCEEDED:
             self.get_logger().info('Navigation robot1 succeeded! ')
+            self.NavStatusMsg = NavigationStatusMSG.SUCCESS
             # //self.ui.label_target_status_robot1.setText("Goal Finish")
         elif status == GoalStatus.STATUS_CANCELED:
             self.get_logger().info('Navigation robot1 canceled! ')
@@ -209,6 +228,7 @@ class MyNode(Node):
         result = self.handle_action_rpy_to_quaternion(
             float(x), float(y), theta)
         self._action_client_robot1.wait_for_server()
+        self.NavStatusMsg = NavigationStatusMSG.NONE
         self._send_goal_future_robot1 = self._action_client_robot1.send_goal_async(
             result, feedback_callback=self.feedback_robot1_callback)
         self._send_goal_future_robot1.add_done_callback(
@@ -409,6 +429,7 @@ class MyNode(Node):
                         self.robot_1_position['y']), float(self.robot_1_euler_angles['yaw'] - score.degree), score.center_dist)
                     self.yolo_result_robot1["position"][list_num] = position
                 self.last_distance = score.center_dist
+                self.new_data_received = True
             else:
                 if True:
                     print("get into True================")
@@ -487,7 +508,7 @@ class MyNode(Node):
             #         degree, distance))
 
     def pose_to_pixel_map(self):
-        start = time.time()
+        self.start_loop_time = time.time()
         if self.Init_Map_Image is not None:
             map = self.Init_Map_Image.copy()
             center_x = self.pose_to_pixel_cell(
@@ -518,7 +539,7 @@ class MyNode(Node):
             #                (0, 100, 100), markerType=2, markerSize=3)
 
             # ! 繪製雷射掃描的角度與距離
-            try:
+            """ try:
                 for i in range(len(self.laser_ranges.ranges)):
                     degree = i * self.laser_ranges.angle_increment * 180 / 3.14159
                     distance = self.laser_ranges.ranges[i]
@@ -538,10 +559,11 @@ class MyNode(Node):
                             cv2.circle(map, another_center_point,
                                        3, (0, 255, 255), -1)
             except:
-                pass
+                pass """
+
             for i, pos in enumerate(self.yolo_result_robot1["position"]):
                 # print("pos: ", pos)
-                if(self.yolo_result_robot1["class_id"][i] == self.follow_target_name):
+                if (self.yolo_result_robot1["class_id"][i] == self.follow_target_name):
                     kf.init()
                     another_center_x = self.pose_to_pixel_cell(
                         float(pos[0]), self.map_center_pixel_x)
@@ -556,33 +578,44 @@ class MyNode(Node):
                                        (0, 0, 199), markerType=2, markerSize=5)
                         # self.predicted = kf.predict(
                         #     another_center_x, another_center_y)
-                        # 将包含x和y坐标的元组添加到队列的右侧
-                        self.coordinates.append(another_center_point)
-                        for pt in self.coordinates:
-                            # self.predicted = kf.predict_avoid_obstacle(pt[0], pt[1])
-                            self.predicted = kf.predict(pt[0], pt[1])
-                        #!印出預測的下一個座標(圓形)
-                        # print("another_center_point: ", another_center_point)
-                        # print("self.predicted: ", self.predicted)
-                        cv2.circle(map, self.predicted, 3, (255, 255, 0), -1)
-                        predicted = self.predicted
-                        #!印出未來5筆預測的座標(圓形)
-                        for i in range(self.future_predicted_maxlen):
-                            predicted = kf.predict_avoid_obstacle(
-                                predicted[0], predicted[1])
-                            self.future_predicted.append(predicted)
-                            # predicted = kf.predict(predicted[0], predicted[1])
-                            cv2.circle(map, predicted, 3, (200, 220, 100), 1)
-                            # print("predicted: ", predicted)
+                        if time.time() - self.predicted_start_time > 0.2:  # 壓縮預測速度(這樣看起來可能會比較好一點)
+                            # 将包含x和y坐标的元组添加到队列的右侧
+                            self.coordinates.append(
+                                another_center_point)  # 共會儲存20組座標
+                            for pt in self.coordinates:
+                                self.predicted = kf.predict(pt[0], pt[1])
+                                # //self.predicted = kf.predict_avoid_obstacle(pt[0], pt[1])
 
-                        self.predicted_final_pos, self.predicted_final_degree = self.two_pos_get_degree(
-                            self.future_predicted[0], self.future_predicted[self.future_predicted_maxlen-1])
-                        print("future_predicted: ",
-                              self.future_predicted)
-                        print("predicted_final_pos: ",
-                              self.predicted_final_pos)
-                        print("predicted_final_degree: ",
-                              self.predicted_final_degree)
+                            #!印出預測的下一個座標(圓形)
+                            # print("another_center_point: ", another_center_point)
+                            # print("self.predicted: ", self.predicted)
+                            cv2.circle(map, self.predicted,
+                                       3, (255, 255, 0), -1)
+                            predicted = self.predicted
+                            #!印出未來5筆預測的座標(圓形)
+                            for i in range(self.future_predicted_maxlen):
+                                predicted = kf.predict_avoid_obstacle(
+                                    predicted[0], predicted[1])
+                                self.future_predicted.append(predicted)
+                                # //predicted = kf.predict(predicted[0], predicted[1])
+                                cv2.circle(map, predicted, 3,
+                                           (200, 220, 100), 1)
+                                # print("predicted: ", predicted)
+                            self.predicted_final_pos, self.predicted_final_degree = self.two_pos_get_degree(
+                                self.future_predicted[0], self.future_predicted[self.future_predicted_maxlen-1])
+                            # print("future_predicted: ",
+                            #       self.future_predicted)
+                            # print("predicted_final_pos: ",
+                            #       self.predicted_final_pos)
+                            # print("predicted_final_degree: ",
+                            #       self.predicted_final_degree)
+                            self.predicted_start_time = time.time()
+                        else:
+                            cv2.circle(map, self.predicted,
+                                       3, (255, 255, 0), -1)
+                            for predicted in self.future_predicted:
+                                cv2.circle(map, predicted, 3,
+                                           (200, 220, 100), 1)
 
             #!印出目標物移動軌跡(線段)
             if len(self.__points) > 1:
@@ -612,15 +645,16 @@ class MyNode(Node):
                 self.follow_controller_start_follow()
             elif key == ord('q'):
                 self.follow_controller_cancel()
+                self.state_machine_status = StateMachineStatus.Idle
+            elif key == ord('z'):
                 self.publish_robot_position_target(
                     self.predicted_final_pos[0], self.predicted_final_pos[1], self.predicted_final_degree)
-            elif key == ord('z'):
-                self.publish_robot_position_target(0, 0, 0)
             elif key == ord('c'):
                 self.cancel_robot1_goal()
-            # loop_time = int((time.time()-start) * 1000)
+            # loop_time = int((time.time()-self.start_loop_time) * 1000)
             # print("loop time(ms): ", loop_time)
             self.state_machine_proc()
+            self.new_data_received = False
 
     def print_debug_msg(self):
         print(self.yolo_result_robot1["position"])
@@ -628,13 +662,100 @@ class MyNode(Node):
         print("follow_elapsed_time:", self.follow_elapsed_time)
 
     def state_machine_proc(self):
-        if self.state == StateMachineStatus.Idle:
-            # print("Idle state")
-            self.state = StateMachineStatus.Target_Missing
+        if self.last_state_machine_status != self.state_machine_status:
+            self.last_state_machine_status = self.state_machine_status
+            print("state_machine_status: ", self.state_machine_status)
 
-        elif self.state == StateMachineStatus.Target_Missing:
-            # print("Target_Missing state")
-            self.state = StateMachineStatus.Idle
+        if self.state_machine_status == StateMachineStatus.Idle:
+            pass
+            # if self.follow_status_msg == FollowStatusMSG.FOLLOWING:
+            #     self.state_machine_status = StateMachineStatus.Target_Following
+
+        elif self.state_machine_status == StateMachineStatus.Target_Following:
+            # 目標正在跟隨中，但突然接收到Missing
+            if self.follow_status_msg == FollowStatusMSG.MISSING:
+                self.state_machine_status = StateMachineStatus.Target_Missing
+                self.start_missing_time = self.follow_elapsed_time
+
+        elif self.state_machine_status == StateMachineStatus.Target_Missing:
+            # 目標已跟丟一定時間
+            if self.follow_elapsed_time - self.start_missing_time > 2.5:
+                print("target missing enough==================")
+                self.saved_future_predicted = self.future_predicted
+                self.state_machine_status = StateMachineStatus.Target_Missing_Proc
+            # 跟丟後又找回來目標
+            if self.follow_status_msg == FollowStatusMSG.FOLLOWING:
+                self.state_machine_status = StateMachineStatus.Target_Following
+
+        elif self.state_machine_status == StateMachineStatus.Target_Missing_Proc:
+            # 取消跟隨
+            self.follow_controller_cancel()
+            # 開始移動至預測位置
+            kf.init()
+            for i in range(15):  # 使用之前的15組餵給KF
+                predicted = kf.predict(
+                    self.coordinates[i][0], self.coordinates[i][1])
+            for i in range(self.future_predicted_maxlen):
+                predicted = kf.predict_avoid_obstacle(
+                    predicted[0], predicted[1])
+                self.future_predicted.append(predicted)
+            self.predicted_final_pos, self.predicted_final_degree = self.two_pos_get_degree(
+                self.future_predicted[0], self.future_predicted[self.future_predicted_maxlen-1])
+
+            self.publish_robot_position_target(
+                self.predicted_final_pos[0], self.predicted_final_pos[1], self.predicted_final_degree)
+            self.state_machine_status = StateMachineStatus.Target_Missing_Nav
+
+        elif self.state_machine_status == StateMachineStatus.Target_Missing_Nav:
+            # 如果在移動到預測位置的途中，又重新找到目標，則又繼續啟動跟隨
+            if self.new_data_received == True:
+                # self.follow_controller_cancel()
+                self.follow_controller_update("walker")
+                self.follow_controller_start_follow()  # 啟動跟隨
+                self.cancel_robot1_goal()
+                self.Target_Missing_Nav_time = time.time()
+                self.state_machine_status = StateMachineStatus.Target_Missing_Nav_Check
+
+            if self.NavStatusMsg == NavigationStatusMSG.SUCCESS:
+                # 已經到nav定位，但還沒啟動跟隨
+                self.state_machine_status = StateMachineStatus.Target_Pos_Predict_Retry
+
+        elif self.state_machine_status == StateMachineStatus.Target_Missing_Nav_Check:
+            # 已經啟動跟隨(取消nav)，但沒有在時間內找到目標
+            print("---not find target---")
+            if time.time() - self.Target_Missing_Nav_time > 2.0:
+                print("---out time not find target---")
+                if self.follow_status_msg == FollowStatusMSG.MISSING:
+                    print("----------Start follow but not find target-----")
+                    # 先用先前預測未來的座標，餵給kf預測然後再用predict_avoid_obstacle在預測未來的未來座標
+                    # kf.init()
+                    # for pt in self.saved_future_predicted:
+                    #     predicted = kf.predict(pt[0], pt[1])
+                    # for i in range(self.future_predicted_maxlen):
+                    #     predicted = kf.predict_avoid_obstacle(
+                    #         predicted[0], predicted[1])
+                    #     self.future_predicted.append(predicted)
+                    self.state_machine_status = StateMachineStatus.Target_Missing_Proc
+                    self.start_missing_time = self.follow_elapsed_time
+                self.Target_Missing_Nav_time = time.time()
+
+            elif self.follow_status_msg == FollowStatusMSG.FOLLOWING:
+                print("----------Start follow and find target-----")
+                self.state_machine_status = StateMachineStatus.Idle
+
+        elif self.state_machine_status == StateMachineStatus.Target_Pos_Predict_Retry:
+            # 已經到nav定位，但還沒有找到目標，則需要再用未來預測的座標，再次進行預測
+            print("----------Trough Nav but not find target-----")
+            # 先用先前預測未來的座標，餵給kf預測然後再用predict_avoid_obstacle在預測未來的未來座標
+            # kf.init()
+            # for pt in self.saved_future_predicted:
+            #     predicted = kf.predict(pt[0], pt[1])
+            # for i in range(self.future_predicted_maxlen):
+            #     predicted = kf.predict_avoid_obstacle(
+            #         predicted[0], predicted[1])
+            #     self.future_predicted.append(predicted)
+            self.state_machine_status = StateMachineStatus.Target_Missing_Proc
+            self.start_missing_time = self.follow_elapsed_time
 
     def two_pos_get_degree(self, pos1=(0.0, 0.0), pos2=(0.0, 0.0)):
         # * 二維座標求角度
@@ -662,9 +783,10 @@ class MyNode(Node):
         angle = math.atan2(dy, dx)
         # print("angle: ", angle)
         # 轉換度數表示
-        degree = (angle * 180 / math.pi) * (-1) # ! 因為是從pixel 轉換回來的 所以需要從乘上 (-1) 角度才會正確
+        # ! 因為是從pixel 轉換回來的 所以需要從乘上 (-1) 角度才會正確
+        degree = (angle * 180 / math.pi) * (-1)
         # print("degree: ", degree)
-        return (x1, y1), degree
+        return (x2, y2), degree
 
 
 def main(args=None):

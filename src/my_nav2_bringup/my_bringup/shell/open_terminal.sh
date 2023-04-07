@@ -1,5 +1,12 @@
 #!/bin/bash
 # gnome-terminal --tab #打開兩個，第一個兩個tab，第二個3個tab
+ros2 daemon stop
+sleep 3
+ros2 daemon start
+sleep 3
+killall gzserver ; killall gzclient
+sleep 3
+ros2 topic list
 # ! 啟動ros2以及整個Gazebo模擬環境
 gnome-terminal --tab -t "multi_tb3_simulation_v5_launch" -- zsh -c "killall gzserver ; killall gzclient;cd ~/ros2_ws;exec zsh;"
 # ! 啟動YOLOV5

@@ -139,7 +139,7 @@ class TrackActionServer(Node):
     def init_pid(self):
         self.target_center_pixel = (0, 0)
         self.target_center_distance = 0.0
-        self.pid_kp = [1.3, 1.5]
+        self.pid_kp = [1.3, 1.3]
         self.pid_ki = [0.01, 0.01]
         self.pid_kd = [1.5, 1.5]
         # self.pid_kp = [self.args.PID_Kp, self.args.PID_Kp]
@@ -188,26 +188,27 @@ class TrackActionServer(Node):
 
         if self.pid_kp[1] != 0:
             x_linear = self.x_linear_map(
-                x_linear, -1.0 * self.pid_kp[1], 1.0 * self.pid_kp[1], 0.25, -0.35)  # 前進後退
+                x_linear, -1.0 * self.pid_kp[1], 1.0 * self.pid_kp[1], 0.25, -0.30)  # 前進後退
         # print("x_linear: ", x_linear)
         # print("===============================")
         # 限制速度
-        if x_linear > 0.9:
-            x_linear = 0.0
-        if x_linear < -1.5:
-            x_linear = -0.0
+        if x_linear > 1.0:
+            x_linear = 1.0
+        if x_linear < -1.0:
+            x_linear = -1.0
         if math.isnan(x_linear) or math.isinf(x_linear):
             x_linear = 0.0
             self.pid.ITerm[1] = 0.0
 
         if z_angular > 0.5:
-            z_angular = 0.0
+            z_angular = 0.5
         if z_angular < -0.5:
-            z_angular = -0.0
+            z_angular = -0.5
         if math.isnan(z_angular) or math.isinf(z_angular):
             z_angular = 0.0
             self.pid.ITerm[0] = 0.0
-
+        # print("x_linear: ", x_linear, "; z_angular: ", z_angular)
+        # print("===============================")
         twist.linear.x = x_linear
         twist.linear.y = 0.0
         twist.linear.z = 0.0
@@ -229,6 +230,7 @@ class TrackActionServer(Node):
         self._publisher_twist_robot1.publish(twist)
 
     def init_twist_robot1(self):
+        print("init_twist_robot1")
         if (self._publisher_twist_robot1 is None):
             return
         twist = Twist()
@@ -258,16 +260,18 @@ class TrackActionServer(Node):
                     float(self.target_center_pixel[0]), self.target_center_distance]
                 self.pid.update(self.pid_feedback, now_time)
                 output = self.pid.output
+                self._send_twist_robot1(output[0], output[1])
                 self.publish_PID_Curve(
                     self.pid_feedback, output, now_time.to_msg())
                 # print("pid_feedback: ", self.pid_feedback)
                 # print("target_center_pixel: ", self.target_center_pixel)
                 # print("output: ", output)
-                self._send_twist_robot1(output[0], output[1])
                 self.PID_Control_Status = PID_Control_Status.TRACKING
             else:
                 self.pid.ITerm = [0.0, 0.0]
                 if self.PID_Control_Status == PID_Control_Status.TRACKING:
+                    self.init_twist_robot1()  # ! 不能一直卡在這裡，會無法控制車子移動(理論上應該只需要觸發一次)
+                    self.init_twist_robot1()  # ! 不能一直卡在這裡，會無法控制車子移動(理論上應該只需要觸發一次)
                     self.init_twist_robot1()  # ! 不能一直卡在這裡，會無法控制車子移動(理論上應該只需要觸發一次)
                 self.PID_Control_Status = PID_Control_Status.MISSING
                 print("Target Missing!!!")
@@ -303,6 +307,10 @@ class TrackActionServer(Node):
         self.control_PID_loop_run = DISABLE
         # cancel時機器人需停止移動
         self.pid.ITerm = [0.0, 0.0]
+        self.init_twist_robot1()
+        self.init_twist_robot1()
+        self.init_twist_robot1()
+        self.init_twist_robot1()
         self.init_twist_robot1()
         return CancelResponse.ACCEPT
 
