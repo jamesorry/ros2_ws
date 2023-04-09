@@ -20,7 +20,7 @@ from enum import IntEnum
 import matplotlib.pyplot as plt
 from collections import deque
 from builtin_interfaces.msg import Time
-
+import logging
 ENABLE = True
 DISABLE = False
 
@@ -45,6 +45,8 @@ class Robot_Angular_Status(IntEnum):
 class TrackActionServer(Node):
     def __init__(self):
         super().__init__('track_action_server')
+        logging.basicConfig(format='%(asctime)s.%(msecs)03d - %(message)s',
+                            level=logging.INFO, datefmt='%H:%M:%S')
         parser = argparse.ArgumentParser(description='manual to this script')
         parser.add_argument('-n', '--robot_name', type=str, default='robot1',
                             help='Name of the robot to spawn')
@@ -121,20 +123,21 @@ class TrackActionServer(Node):
         # time_str = time.strftime('%H:%M:%S', time.gmtime(timestamp)) + f".{ms}"
         # print(f"Timestamp: {time_str}")
         self.boundbox_list_num = data.bounding_num
-        # print("boundbox_list_num: ", self.boundbox_list_num)
-        for i in range(0, self.boundbox_list_num):
-            self.class_id_list[i] = (data.bounding_boxes[i].class_id)
-            # print(self.class_id_list[i])
+        # //print("boundbox_list_num: ", self.boundbox_list_num)
+        # for i in range(0, self.boundbox_list_num):
+        #     self.class_id_list[i] = (data.bounding_boxes[i].class_id)
+        #     # print(self.class_id_list[i])
         for score in data.bounding_boxes:
             # print("score: ", score)
-            # print(f"class_id: {(score.class_id)}")
+            print(f"class_id: {(score.class_id)}")
             # print(f"probability: {score.probability}")
             # print(f"center_dist: {score.center_dist}")
             if str(score.class_id) == self.target_object_name:
                 self.target_center_pixel = (score.x_center, score.y_center)
                 self.target_center_distance = score.center_dist
-                # print(f"target_center_pixel: {self.target_center_pixel}")
-                # print(f"target_center_distance: {self.target_center_distance}")
+                print(f"target_center_pixel: {self.target_center_pixel}")
+                print(f"target_center_distance: {self.target_center_distance}")
+            logging.info("=================")
 
     def init_pid(self):
         self.target_center_pixel = (0, 0)
@@ -331,7 +334,8 @@ class TrackActionServer(Node):
         # Start executing the action
         self.pid.ITerm = [0.0, 0.0]
         t1 = time.time()
-        while (goal_handle.request.object_name in self.class_id_list):
+        # while (goal_handle.request.object_name in self.class_id_list):
+        while True:
             # If goal is flagged as no longer active (ie. another goal was accepted),
             # then stop executing
             if not goal_handle.is_active:

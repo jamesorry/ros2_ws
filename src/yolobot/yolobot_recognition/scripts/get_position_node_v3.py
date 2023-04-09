@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import logging
+import datetime
 from enum import Enum, auto
 from action_msgs.msg import GoalStatus
 from my_robot_interfaces.action import ObjectTrack
@@ -101,6 +103,9 @@ class MyNode(Node):
 
     def __init__(self):
         super().__init__("get_position_node")
+        logging.basicConfig(format='%(asctime)s.%(msecs)03d - %(message)s',
+                            level=logging.INFO, datefmt='%H:%M:%S')
+        logging.info('start logging')
         self.counter_ = 0
         self.get_logger().info("start ros2 get_position_node")
         self.robot_1_position = {'x': 0.0, 'y': 0.0, 'z': 0.0}
@@ -113,7 +118,8 @@ class MyNode(Node):
                                    "probability": [],
                                    "center_dist": [],
                                    "position": [],
-                                   "degree": []
+                                   "degree": [],
+                                   "time_stamp": []
                                    }
         self.sub_robot1_position = self.create_subscription(
             Odometry, '/robot1/odom', self.sub_robot_1_position, 10)
@@ -156,6 +162,8 @@ class MyNode(Node):
 
         self.new_data_received = False
         self.predicted_start_time = time.time()
+
+        self.last_boundbox_time_stamp = None
     # ! =========================================================================
     # *nav2 controller
 
@@ -428,6 +436,7 @@ class MyNode(Node):
                     position = self.get_another_point(float(self.robot_1_position['x']), -1.0*float(
                         self.robot_1_position['y']), float(self.robot_1_euler_angles['yaw'] - score.degree), score.center_dist)
                     self.yolo_result_robot1["position"][list_num] = position
+                    self.yolo_result_robot1["time_stamp"][list_num] = data.header.stamp
                 self.last_distance = score.center_dist
                 self.new_data_received = True
             else:
@@ -444,6 +453,8 @@ class MyNode(Node):
                     position = self.get_another_point(float(self.robot_1_position['x']), -1.0*float(
                         self.robot_1_position['y']), float(self.robot_1_euler_angles['yaw'] - score.degree), score.center_dist)
                     self.yolo_result_robot1["position"].append(position)
+                    self.yolo_result_robot1["time_stamp"].append(
+                        data.header.stamp)
                     list_num = len(self.yolo_result_robot1["class_id"])
                     self.last_distance = score.degree
                     # self.insert_tablewidget_robot1(
@@ -579,37 +590,40 @@ class MyNode(Node):
                         # self.predicted = kf.predict(
                         #     another_center_x, another_center_y)
                         if time.time() - self.predicted_start_time > 0.2:  # 壓縮預測速度(這樣看起來可能會比較好一點)
-                            # 将包含x和y坐标的元组添加到队列的右侧
-                            self.coordinates.append(
-                                another_center_point)  # 共會儲存20組座標
-                            for pt in self.coordinates:
-                                self.predicted = kf.predict(pt[0], pt[1])
-                                # //self.predicted = kf.predict_avoid_obstacle(pt[0], pt[1])
+                            if self.last_boundbox_time_stamp != self.yolo_result_robot1["time_stamp"][i]:
+                                self.last_boundbox_time_stamp = self.yolo_result_robot1["time_stamp"][i]
+                                # 将包含x和y坐标的元组添加到队列的右侧
+                                self.coordinates.append(
+                                    another_center_point)  # 共會儲存20組座標
+                                for pt in self.coordinates:
+                                    self.predicted = kf.predict(pt[0], pt[1])
+                                    # //self.predicted = kf.predict_avoid_obstacle(pt[0], pt[1])
 
-                            #!印出預測的下一個座標(圓形)
-                            # print("another_center_point: ", another_center_point)
-                            # print("self.predicted: ", self.predicted)
-                            cv2.circle(map, self.predicted,
-                                       3, (255, 255, 0), -1)
-                            predicted = self.predicted
-                            #!印出未來5筆預測的座標(圓形)
-                            for i in range(self.future_predicted_maxlen):
-                                predicted = kf.predict_avoid_obstacle(
-                                    predicted[0], predicted[1])
-                                self.future_predicted.append(predicted)
-                                # //predicted = kf.predict(predicted[0], predicted[1])
-                                cv2.circle(map, predicted, 3,
-                                           (200, 220, 100), 1)
-                                # print("predicted: ", predicted)
-                            self.predicted_final_pos, self.predicted_final_degree = self.two_pos_get_degree(
-                                self.future_predicted[0], self.future_predicted[self.future_predicted_maxlen-1])
-                            # print("future_predicted: ",
-                            #       self.future_predicted)
-                            # print("predicted_final_pos: ",
-                            #       self.predicted_final_pos)
-                            # print("predicted_final_degree: ",
-                            #       self.predicted_final_degree)
-                            self.predicted_start_time = time.time()
+                                # logging.info("predicted")
+                                #!印出預測的下一個座標(圓形)
+                                # print("another_center_point: ", another_center_point)
+                                # print("self.predicted: ", self.predicted)
+                                cv2.circle(map, self.predicted,
+                                           3, (255, 255, 0), -1)
+                                predicted = self.predicted
+                                #!印出未來5筆預測的座標(圓形)
+                                for i in range(self.future_predicted_maxlen):
+                                    predicted = kf.predict_avoid_obstacle(
+                                        predicted[0], predicted[1])
+                                    self.future_predicted.append(predicted)
+                                    # //predicted = kf.predict(predicted[0], predicted[1])
+                                    cv2.circle(map, predicted, 3,
+                                               (200, 220, 100), 1)
+                                    # print("predicted: ", predicted)
+                                # self.predicted_final_pos, self.predicted_final_degree = self.two_pos_get_degree(
+                                #     self.future_predicted[0], self.future_predicted[self.future_predicted_maxlen-1])
+                                # print("future_predicted: ",
+                                #       self.future_predicted)
+                                # print("predicted_final_pos: ",
+                                #       self.predicted_final_pos)
+                                # print("predicted_final_degree: ",
+                                #       self.predicted_final_degree)
+                                self.predicted_start_time = time.time()
                         else:
                             cv2.circle(map, self.predicted,
                                        3, (255, 255, 0), -1)
@@ -654,7 +668,8 @@ class MyNode(Node):
             # loop_time = int((time.time()-self.start_loop_time) * 1000)
             # print("loop time(ms): ", loop_time)
             self.state_machine_proc()
-            self.new_data_received = False
+            if self.new_data_received == True:
+                self.new_data_received = False
 
     def print_debug_msg(self):
         print(self.yolo_result_robot1["position"])
@@ -664,12 +679,13 @@ class MyNode(Node):
     def state_machine_proc(self):
         if self.last_state_machine_status != self.state_machine_status:
             self.last_state_machine_status = self.state_machine_status
-            print("state_machine_status: ", self.state_machine_status)
+            logging.info("state_machine_status: %s", self.state_machine_status)
+            # print("state_machine_status: ", self.state_machine_status)
 
         if self.state_machine_status == StateMachineStatus.Idle:
-            pass
-            # if self.follow_status_msg == FollowStatusMSG.FOLLOWING:
-            #     self.state_machine_status = StateMachineStatus.Target_Following
+            if self.follow_status_msg == FollowStatusMSG.FOLLOWING:
+                self.state_machine_status = StateMachineStatus.Target_Following
+            # pass
 
         elif self.state_machine_status == StateMachineStatus.Target_Following:
             # 目標正在跟隨中，但突然接收到Missing
@@ -680,7 +696,8 @@ class MyNode(Node):
         elif self.state_machine_status == StateMachineStatus.Target_Missing:
             # 目標已跟丟一定時間
             if self.follow_elapsed_time - self.start_missing_time > 2.5:
-                print("target missing enough==================")
+                logging.info("target missing enough==================")
+                self.saved_coordinates = self.coordinates
                 self.saved_future_predicted = self.future_predicted
                 self.state_machine_status = StateMachineStatus.Target_Missing_Proc
             # 跟丟後又找回來目標
@@ -692,9 +709,9 @@ class MyNode(Node):
             self.follow_controller_cancel()
             # 開始移動至預測位置
             kf.init()
-            for i in range(15):  # 使用之前的15組餵給KF
+            for i in range(20):  # 使用之前的0~15組餵給KF
                 predicted = kf.predict(
-                    self.coordinates[i][0], self.coordinates[i][1])
+                    self.saved_coordinates[i][0], self.saved_coordinates[i][1])
             for i in range(self.future_predicted_maxlen):
                 predicted = kf.predict_avoid_obstacle(
                     predicted[0], predicted[1])
@@ -722,11 +739,12 @@ class MyNode(Node):
 
         elif self.state_machine_status == StateMachineStatus.Target_Missing_Nav_Check:
             # 已經啟動跟隨(取消nav)，但沒有在時間內找到目標
-            print("---not find target---")
+            logging.info("---not find target---")
             if time.time() - self.Target_Missing_Nav_time > 2.0:
-                print("---out time not find target---")
+                logging.info("---out time not find target---")
                 if self.follow_status_msg == FollowStatusMSG.MISSING:
-                    print("----------Start follow but not find target-----")
+                    logging.info(
+                        "----------Start follow but not find target-----")
                     # 先用先前預測未來的座標，餵給kf預測然後再用predict_avoid_obstacle在預測未來的未來座標
                     # kf.init()
                     # for pt in self.saved_future_predicted:
@@ -735,17 +753,19 @@ class MyNode(Node):
                     #     predicted = kf.predict_avoid_obstacle(
                     #         predicted[0], predicted[1])
                     #     self.future_predicted.append(predicted)
+                    self.saved_coordinates = self.coordinates
+                    self.saved_future_predicted = self.future_predicted
                     self.state_machine_status = StateMachineStatus.Target_Missing_Proc
                     self.start_missing_time = self.follow_elapsed_time
                 self.Target_Missing_Nav_time = time.time()
 
             elif self.follow_status_msg == FollowStatusMSG.FOLLOWING:
-                print("----------Start follow and find target-----")
+                logging.info("----------Start follow and find target-----")
                 self.state_machine_status = StateMachineStatus.Idle
 
         elif self.state_machine_status == StateMachineStatus.Target_Pos_Predict_Retry:
             # 已經到nav定位，但還沒有找到目標，則需要再用未來預測的座標，再次進行預測
-            print("----------Trough Nav but not find target-----")
+            logging.info("----------Trough Nav but not find target-----")
             # 先用先前預測未來的座標，餵給kf預測然後再用predict_avoid_obstacle在預測未來的未來座標
             # kf.init()
             # for pt in self.saved_future_predicted:
@@ -754,21 +774,25 @@ class MyNode(Node):
             #     predicted = kf.predict_avoid_obstacle(
             #         predicted[0], predicted[1])
             #     self.future_predicted.append(predicted)
+            self.saved_coordinates = self.coordinates
+            self.saved_future_predicted = self.future_predicted
             self.state_machine_status = StateMachineStatus.Target_Missing_Proc
             self.start_missing_time = self.follow_elapsed_time
 
     def two_pos_get_degree(self, pos1=(0.0, 0.0), pos2=(0.0, 0.0)):
         # * 二維座標求角度
+        logging.info("get_degree pos1: %s", pos1)
+        logging.info("get_degree pos2: %s", pos2)
         # 兩個座標
         x1, y1 = pos1[0], pos1[1]
         x2, y2 = pos2[0], pos2[1]
-
         x1 = self.pixel_cell_to_pose(x1, self.map_center_pixel_x)
         y1 = self.pixel_cell_to_pose(y1, self.map_center_pixel_y)
 
         x2 = self.pixel_cell_to_pose(x2, self.map_center_pixel_x)
         y2 = self.pixel_cell_to_pose(y2, self.map_center_pixel_y)
-
+        logging.info("get_degree x1y1: %s %s", x1, y1)
+        logging.info("get_degree x2y2: %s %s", x2, y2)
         # 計算位置向量的分量
         dx = x2 - x1
         dy = y2 - y1

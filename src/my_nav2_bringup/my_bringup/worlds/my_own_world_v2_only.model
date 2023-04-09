@@ -76,10 +76,10 @@
             <time>20</time>
             <pose>-8.0 -8.0 0.0 0.0 0.0 1.57</pose>
           </waypoint>
-          <waypoint>
+          <!-- <waypoint>
             <time>23</time>
             <pose>-8.0 -8.0 0.0 0.0 0.0 0.785</pose>
-          </waypoint>
+          </waypoint> -->
           <!-- ! 測試用  -->
           <!-- <waypoint>
             <time>25</time>
@@ -107,12 +107,24 @@
             <pose>-8.0 8.0 0.0 0.0 0.0 1.57</pose>
           </waypoint>
           <waypoint>
-            <time>55</time>
-            <pose>-8.0 10.0 0.0 0.0 0.0 1.57</pose>
+            <time>52</time>
+            <pose>-8.0 8.0 0.0 0.0 0.0 0.785</pose>
           </waypoint>
           <waypoint>
+            <time>57</time>
+            <pose>-7.0 9.0 0.0 0.0 0.0 0.785</pose>
+          </waypoint>
+          <!-- <waypoint>
+            <time>55</time>
+            <pose>-8.0 10.0 0.0 0.0 0.0 1.57</pose>
+          </waypoint> -->
+          <!-- <waypoint>
             <time>60</time>
             <pose>-8.0 10.0 0.0 0.0 0.0 0.0</pose>
+          </waypoint> -->
+          <waypoint>
+            <time>64</time>
+            <pose>-6.0 10.0 0.0 0.0 0.0 0.785</pose>
           </waypoint>
           <waypoint>
             <time>65</time>

@@ -1,0 +1,94 @@
+<mxfile host="65bd71144e">
+    <diagram id="h2HFjBRP-GiV1qSYWHtN" name="第1頁">
+        <mxGraphModel dx="1837" dy="554" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="2" value="YOLOv5&lt;br&gt;辨識特定目標" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="60" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="3" value="機器人跟隨server&lt;br&gt;（控制機器人&lt;br&gt;移動跟隨）" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="410" y="60" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="4" value="顯示&lt;br&gt;目標跟隨狀況&lt;br&gt;預測目標移動座標&lt;br&gt;處理跟隨失敗狀況" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="630" y="60" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="5" value="ros_recognition_yolo_fix_v10.py" style="text;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="50" y="20" width="190" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="6" value="track_action_server.py" style="text;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="410" y="20" width="150" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="7" value="get_position_node_v3.py&lt;br&gt;(kalmanfilter.py)" style="text;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="630" y="10" width="170" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="9" value="訂閱&lt;br&gt;&quot;&lt;span style=&quot;color: rgb(206, 145, 120); background-color: rgb(30, 30, 30); font-family: &amp;quot;Droid Sans Mono&amp;quot;, &amp;quot;monospace&amp;quot;, monospace; font-size: 14px;&quot;&gt;/intel_realsense_r200_depth/image_raw&lt;/span&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;&quot;&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="85" y="150" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="10" value="發布辨識結果MSG&lt;br&gt;&quot;&lt;span style=&quot;color: rgb(206, 145, 120); font-family: &amp;quot;Droid Sans Mono&amp;quot;, &amp;quot;monospace&amp;quot;, monospace; font-size: 14px; background-color: rgb(30, 30, 30);&quot;&gt;/&lt;/span&gt;&lt;span style=&quot;color: rgb(206, 145, 120); background-color: rgb(30, 30, 30); font-family: &amp;quot;Droid Sans Mono&amp;quot;, &amp;quot;monospace&amp;quot;, monospace; font-size: 14px;&quot;&gt;bounding_boxes&lt;/span&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;&quot;&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="85" y="470" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="11" value="訂閱&lt;br&gt;&quot;&lt;span style=&quot;color: rgb(206, 145, 120); background-color: rgb(30, 30, 30); font-family: &amp;quot;Droid Sans Mono&amp;quot;, &amp;quot;monospace&amp;quot;, monospace; font-size: 14px;&quot;&gt;/intel_realsense_r200_depth/points&lt;/span&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;&quot;&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="85" y="310" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="13" value="" style="edgeStyle=none;html=1;" parent="1" source="12" target="11" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="12" value="影像進行YOLO辨識" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="85" y="230" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="14" value="轉換成點雲圖&lt;br&gt;將辨識的影像結果與點雲圖進行匹配，獲取辨識目標的圖像box位置，以及其box內得深度距離值" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="85" y="390" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="15" value="將所辨識到的圖像及其box位置及其box內得深度距離值進行封裝，在利用Publisher將資料發送出去" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="85" y="555" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="16" value="訂閱&lt;br&gt;&quot;&lt;font face=&quot;Droid Sans Mono, monospace, monospace&quot; color=&quot;#ce9178&quot;&gt;&lt;span style=&quot;font-size: 14px; background-color: rgb(30, 30, 30);&quot;&gt;/&lt;/span&gt;&lt;/font&gt;&lt;span style=&quot;color: rgb(206, 145, 120); background-color: rgb(30, 30, 30); font-family: &amp;quot;Droid Sans Mono&amp;quot;, &amp;quot;monospace&amp;quot;, monospace; font-size: 14px;&quot;&gt;bounding_boxes&lt;/span&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;&quot;&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="410" y="370" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="17" value="訂閱&lt;br&gt;&quot;&lt;font face=&quot;Droid Sans Mono, monospace, monospace&quot; color=&quot;#ce9178&quot;&gt;&lt;span style=&quot;font-size: 14px; background-color: rgb(30, 30, 30);&quot;&gt;/&lt;/span&gt;&lt;/font&gt;&lt;span style=&quot;color: rgb(206, 145, 120); background-color: rgb(30, 30, 30); font-family: &amp;quot;Droid Sans Mono&amp;quot;, &amp;quot;monospace&amp;quot;, monospace; font-size: 14px;&quot;&gt;cmd_vel&lt;/span&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;&quot;&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="410" y="570" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="18" value="創建並啟動ActionServer&lt;br&gt;&quot;&lt;font color=&quot;#ce9178&quot;&gt;&lt;font face=&quot;Droid Sans Mono, monospace, monospace&quot;&gt;&lt;span style=&quot;font-size: 14px; background-color: rgb(30, 30, 30);&quot;&gt;/&lt;/span&gt;&lt;/font&gt;&lt;/font&gt;&lt;span style=&quot;color: rgb(206, 145, 120); background-color: rgb(30, 30, 30); font-family: &amp;quot;Droid Sans Mono&amp;quot;, &amp;quot;monospace&amp;quot;, monospace; font-size: 14px;&quot;&gt;object_track&lt;/span&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;&quot;&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="410" y="170" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="19" value="用來處理接收到client的資料(啟動或是取消)，控制機器人跟隨YOLO辨識目標，更新跟隨狀態給client" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="410" y="270" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="20" value="接收YOLO辨識完成的結果，用來給server解析是否client要求的目標是否存在於box內" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="410" y="470" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="21" value="用來控制機器人移動&lt;br&gt;（使用pid控制機器人移動，防止失去控制）" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="410" y="660" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="22" value="跟隨部份為影像中的目標物的box重心點，以及其重心點的深度距離" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="410" y="750" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="23" value="啟動ActionClient&lt;br&gt;&quot;&lt;font color=&quot;#ce9178&quot;&gt;&lt;font face=&quot;Droid Sans Mono, monospace, monospace&quot;&gt;&lt;span style=&quot;font-size: 14px; background-color: rgb(30, 30, 30);&quot;&gt;/&lt;/span&gt;&lt;/font&gt;&lt;/font&gt;&lt;span style=&quot;color: rgb(206, 145, 120); background-color: rgb(30, 30, 30); font-family: &amp;quot;Droid Sans Mono&amp;quot;, &amp;quot;monospace&amp;quot;, monospace; font-size: 14px;&quot;&gt;object_track&lt;/span&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;&quot;&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="630" y="170" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="24" value="用來發送跟隨資訊給server，或是發送取消跟隨，以及獲得server更新的跟隨狀態" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="630" y="270" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="25" value="訂閱&lt;br&gt;&quot;&lt;font color=&quot;#ce9178&quot;&gt;&lt;span style=&quot;font-size: 14px; background-color: rgb(30, 30, 30);&quot;&gt;&lt;font face=&quot;Droid Sans Mono, monospace, monospace&quot;&gt;/costmap&lt;/font&gt;&lt;/span&gt;&lt;/font&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;&quot;&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="630" y="370" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="27" value="costmap為&lt;span style=&quot;color: rgb(78, 201, 176); background-color: rgb(30, 30, 30); font-family: &amp;quot;Droid Sans Mono&amp;quot;, &amp;quot;monospace&amp;quot;, monospace; font-size: 14px;&quot;&gt;OccupancyGrid的ros資料格式&lt;br&gt;&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="630" y="460" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="28" value="需要轉換occupancygrid到numpy格式，並且需要計算其rgb數值後將其轉換為圖像，並且需要將其圖像進行橫向翻轉以及顏色反轉" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="630" y="570" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="29" value="最後需要將其圖像轉換成cv2的bgr8格式圖像即可用於顯示地圖" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="630" y="690" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="30" value="訂閱&lt;br&gt;&quot;&lt;font color=&quot;#ce9178&quot;&gt;&lt;span style=&quot;font-size: 14px; background-color: rgb(30, 30, 30);&quot;&gt;&lt;font face=&quot;Droid Sans Mono, monospace, monospace&quot;&gt;/odom&lt;/font&gt;&lt;/span&gt;&lt;/font&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;&quot;&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="630" y="780" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="31" value="用來訂閱機器人當前位置，將其進行轉換為pixel再將結果與地圖進行合併，即可將機器人座標以及旋轉方向顯示於地圖上" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="630" y="870" width="120" height="60" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

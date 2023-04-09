@@ -1,11 +1,18 @@
 import numpy as np
 import cv2
+import time
+import logging
+import datetime
 
 # 定義 Kalman Filter 的狀態變量數量和觀測變量數量
 state_dim, measure_dim = 4, 2
 
 # 創建一個 Kalman Filter 對象
 kf = cv2.KalmanFilter(state_dim, measure_dim)
+
+logging.basicConfig(format='%(asctime)s.%(msecs)03d - %(message)s', level=logging.INFO, datefmt='%Y-%m-%d %H:%M:%S')
+logging.info('这是一条带有时间的日志')
+logging.info('这是一条带有时间的日志 %s', state_dim)
 
 # 設定 Kalman Filter 的狀態轉移矩陣 A、觀測矩陣 H、控制矩陣 B、狀態噪聲協方差 Q、觀測噪聲協方差 R、狀態估計協方差 P、狀態預測值 x、觀測值 z
 kf.transitionMatrix = np.array([[1, 0, 1, 0], [0, 1, 0, 1], [0, 0, 1, 0], [0, 0, 0, 1]], np.float32)
