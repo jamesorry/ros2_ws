@@ -20,9 +20,9 @@
         <interpolate_x>true</interpolate_x>
       </animation>
       <script>
-        <loop>true</loop>
+        <loop>false</loop>
         <delay_start>50.00</delay_start>
-        <auto_start>true</auto_start>
+        <auto_start>false</auto_start>
         <trajectory id="0" type="walk" tension="0.6">
           <!-- <waypoint>
                 <time>0</time>

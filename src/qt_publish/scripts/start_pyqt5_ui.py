@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding:UTF-8 -*-
 from PyQt5 import QtWidgets
-from pyqt5_control_20 import MainWindow_controller
+from pyqt5_control_21 import MainWindow_controller
 # from qt_material import list_themes
 from qt_material import apply_stylesheet
 # https://github.com/UN-GCPDS/qt-material

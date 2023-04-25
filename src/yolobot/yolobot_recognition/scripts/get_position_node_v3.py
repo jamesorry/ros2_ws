@@ -164,6 +164,19 @@ class MyNode(Node):
         self.predicted_start_time = time.time()
 
         self.last_boundbox_time_stamp = None
+
+        # ! 添加nav plan路徑
+        self.nav_plan_subscription = self.create_subscription(
+            Path, "/robot1/plan", self.nav_plan_path_callback, 10)
+        self.nav_plan_subscription
+
+    def nav_plan_path_callback(self, msg: Path):
+        # 在這裡處理收到的路徑消息，獲取路徑上的點
+        # 將map座標轉換成pixel座標
+        self.nav_plan_points = [(int((pose.pose.position.x / self.map_resolution) + self.map_center_pixel_x), int((pose.pose.position.y / self.map_resolution * -1.0) + self.map_center_pixel_y))
+                                for pose in msg.poses]
+        # print(self.nav_plan_points)
+
     # ! =========================================================================
     # *nav2 controller
 
@@ -643,7 +656,13 @@ class MyNode(Node):
                 #     cv2.circle(
                 #         map, (self.__points[i]), 3, color=(255, 0, 0), thickness=1)
                 # print("self.__points: ", self.__points)
-
+            #! 繪製出plan的路徑規劃
+            try:
+                for i in range(1, len(self.nav_plan_points)):
+                    cv2.line(
+                        map, self.nav_plan_points[i-1], self.nav_plan_points[i], color=(255, 0, 0), thickness=1)
+            except:
+                pass
             # cv2.arrowedLine(输入图像，起始点(x,y)，结束点(x,y)，线段颜色，线段厚度，线段样式，位移因数，箭头因数)
             dsize = (int(2.0 * self.origin_width),
                      int(2.0 * self.origin_height))
@@ -655,7 +674,8 @@ class MyNode(Node):
                 kf.init()
                 self.print_debug_msg()
             elif key == ord('s'):
-                self.follow_controller_update("walker")
+                # self.follow_controller_update("walker")
+                self.follow_controller_update("nurse")
                 self.follow_controller_start_follow()
             elif key == ord('q'):
                 self.follow_controller_cancel()
@@ -683,9 +703,9 @@ class MyNode(Node):
             # print("state_machine_status: ", self.state_machine_status)
 
         if self.state_machine_status == StateMachineStatus.Idle:
-            if self.follow_status_msg == FollowStatusMSG.FOLLOWING:
-                self.state_machine_status = StateMachineStatus.Target_Following
-            # pass
+            pass
+            # if self.follow_status_msg == FollowStatusMSG.FOLLOWING:
+            #     self.state_machine_status = StateMachineStatus.Target_Following
 
         elif self.state_machine_status == StateMachineStatus.Target_Following:
             # 目標正在跟隨中，但突然接收到Missing

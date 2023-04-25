@@ -36,9 +36,9 @@ class MyNode(Node):
                 total_seconds_passed = seconds_passed + nanoseconds_passed / 1e9
                 feedback_value = curvepid.line_feedback_value
                 if num == 0:
-                    output = 350.0# curvepid.line_output
+                    output = 318.0# curvepid.line_output
                 elif num == 1:
-                    output = 1.05
+                    output = 1.23
                 # print("num: ", num)
                 # print("seconds: ", total_seconds_passed)
                 # print("feedback_value: ", feedback_value)
