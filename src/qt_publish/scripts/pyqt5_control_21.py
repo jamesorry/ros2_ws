@@ -363,8 +363,11 @@ class MainWindow_controller(QtWidgets.QMainWindow):
             print("self.origin_channel: ", self.origin_channel)
             print("origin_position_x: ", img.origin_position_x)
             print("origin_position_y: ", img.origin_position_y)
-            self.fix_map_center_pixel_x = -8.8/self.map_resolution
-            self.fix_map_center_pixel_y = -5.24/self.map_resolution
+            # self.fix_map_center_pixel_x = -8.8/self.map_resolution
+            # self.fix_map_center_pixel_y = -5.24/self.map_resolution
+            # 直接從img中取 origin_position_x 以及 origin_position_y
+            self.fix_map_center_pixel_x = img.origin_position_x/self.map_resolution
+            self.fix_map_center_pixel_y = img.origin_position_y/self.map_resolution
             print("self.fix_map_center_pixel_x: ", self.fix_map_center_pixel_x)
             print("self.fix_map_center_pixel_y: ", self.fix_map_center_pixel_y)
             self.map_center_pixel_x = (self.origin_width -

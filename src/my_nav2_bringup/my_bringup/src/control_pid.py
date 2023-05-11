@@ -11,6 +11,7 @@ from rclpy.time import Time
 # ! 因為action server 是在多線程中運行的，但matplotlib必須要在主線程中才能運行。
 # 因此換個思考方向，可以先將資料push到ros2上，再去訂閱回來即可
 
+
 class PID:
     def __init__(self, P=[0.0, 0.0], I=[0.0, 0.0], D=[0.0, 0.0]):
         self.Kp係數 = P
@@ -20,6 +21,12 @@ class PID:
         self.current_time = None
         self.last_time = self.current_time
         self.clear()
+
+    def update_pid(self, P=[0.0, 0.0], I=[0.0, 0.0], D=[0.0, 0.0]):
+        self.Kp係數 = P
+        self.Ki係數 = I
+        self.Kd係數 = D
+        self.ITerm = [0.0, 0.0]
 
     def init_pid_plot(self):
         # 设置图表
@@ -59,7 +66,7 @@ class PID:
         self.ax2.autoscale_view()
         plt.draw()
         plt.pause(0.005)
-        
+
     def update_plot_data(self, sub_num, process_variable, output, current_time):
         if sub_num == 0:
             self.sub1_x_時間.append(current_time)
@@ -70,7 +77,6 @@ class PID:
             self.sub2_y_實際獲取值.append(process_variable)
             self.sub2_y_輸出值.append(output)
         self.draw_pid_plot()
-            
 
     def clear(self):
         self.SetPoint = [0.0, 0.0]  # 目標量[畫面中心點, 物體距離]
@@ -88,10 +94,11 @@ class PID:
     # 將time對象轉換成rclpy.time.Time對象
     rclpy_start_time = Time.from_time(start_time)
     '''
+
     def update(self, feedback_value, _time):
         # print("pid_feedback: ", feedback_value)
-        self.current_time = _time # time.time()
-        delta_time =  self.current_time - self.last_time  # 運行時間
+        self.current_time = _time  # time.time()
+        delta_time = self.current_time - self.last_time  # 運行時間
         # print(type(self.current_time))
         # print(type(self.last_time))
         # print(type(delta_time))

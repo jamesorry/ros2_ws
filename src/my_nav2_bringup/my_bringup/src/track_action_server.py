@@ -71,6 +71,15 @@ class TrackActionServer(Node):
             handle_accepted_callback=self.handle_accepted_callback,
             cancel_callback=self.cancel_callback,
             callback_group=ReentrantCallbackGroup())
+        
+        self.declare_parameter('rotate_pid_kp', 1.3)
+        self.declare_parameter('rotate_pid_ki', 0.01)
+        self.declare_parameter('rotate_pid_kd', 1.5)
+
+        self.declare_parameter('frontback_pid_kp', 1.3)
+        self.declare_parameter('frontback_pid_ki', 0.01)
+        self.declare_parameter('frontback_pid_kd', 1.5)
+        
         self.init_pid()
         self.target_object_name = ""
         self.class_id_list = ["", "", "", "", "", "", "", "", ""]
@@ -89,6 +98,7 @@ class TrackActionServer(Node):
             self.cmd_vel_callback,
             10
         )
+        
 
     def cmd_vel_callback(self, msg: Twist):
         # 可以用來判斷機器人是否移動
@@ -142,16 +152,22 @@ class TrackActionServer(Node):
     def init_pid(self):
         self.target_center_pixel = (0, 0)
         self.target_center_distance = 0.0
-        self.pid_kp = [1.3, 1.3]
-        self.pid_ki = [0.01, 0.01]
-        self.pid_kd = [1.5, 1.5]
+        self.pid_kp = [self.get_parameter('rotate_pid_kp').value, self.get_parameter(
+            'frontback_pid_kp').value]  # [旋轉方向, 前後方向]
+        self.pid_ki = [self.get_parameter('rotate_pid_ki').value, self.get_parameter(
+            'frontback_pid_ki').value]  # [旋轉方向, 前後方向]
+        self.pid_kd = [self.get_parameter('rotate_pid_kd').value, self.get_parameter(
+            'frontback_pid_kd').value]  # [旋轉方向, 前後方向]
+        # self.pid_kp = [1.3, 1.3] # [旋轉方向, 前後方向]
+        # self.pid_ki = [0.01, 0.01] # [旋轉方向, 前後方向]
+        # self.pid_kd = [1.5, 1.5] # [旋轉方向, 前後方向]
         # self.pid_kp = [self.args.PID_Kp, self.args.PID_Kp]
         # self.pid_ki = [self.args.PID_Ki, self.args.PID_Ki]
         # self.pid_kd = [self.args.PID_Kd, self.args.PID_Kd]
         self.pid_feedback = [0.0, 0.0]
         self.pid = PID(self.pid_kp, self.pid_ki, self.pid_kd)
         self.pid.last_time = self.get_clock().now()
-        self.pid.SetPoint = [float(640/2), 1.2]  # 目標量[畫面中心點（X）, 物體距離(m)]
+        self.pid.SetPoint = [float(640/2), 1.19]  # 目標量[畫面中心點（X）, 物體距離(m)]
         self.pid.setSampleTime(0.01)
         __twist_topic_name = "/" + self.args.robot_name + "/cmd_vel"
         print("__twist_topic_name: ", __twist_topic_name)
@@ -282,6 +298,21 @@ class TrackActionServer(Node):
                 #     self.self_rotate(0.08, 0.0)
                 # elif self.target_center_pixel[0] > 320:
                 #     self.self_rotate(-0.08, 0.0)
+        last_pid_kp = [self.get_parameter('rotate_pid_kp').value, self.get_parameter(
+            'frontback_pid_kp').value]  # [旋轉方向, 前後方向]
+        last_pid_ki = [self.get_parameter('rotate_pid_ki').value, self.get_parameter(
+            'frontback_pid_ki').value]  # [旋轉方向, 前後方向]
+        last_pid_kd = [self.get_parameter('rotate_pid_kd').value, self.get_parameter(
+            'frontback_pid_kd').value]  # [旋轉方向, 前後方向]
+        if self.pid_kp != last_pid_kp:
+            self.pid_kp = last_pid_kp
+            self.pid.update_pid(self.pid_kp, self.pid_ki, self.pid_kd)
+        elif self.pid_ki != last_pid_ki:
+            self.pid_ki = last_pid_ki
+            self.pid.update_pid(self.pid_kp, self.pid_ki, self.pid_kd)
+        elif self.pid_kd != last_pid_kd:
+            self.pid_kd = last_pid_kd
+            self.pid.update_pid(self.pid_kp, self.pid_ki, self.pid_kd)
 
     def destroy(self):
         self._action_server.destroy()
