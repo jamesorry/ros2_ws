@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 import logging
+import os
+import sys
 import datetime
 from enum import Enum, auto
 from action_msgs.msg import GoalStatus
@@ -19,11 +21,15 @@ from rclpy.node import Node
 import math
 import cv2
 import numpy as np
+from pathlib import Path as MapPath
 from cv_bridge import CvBridge, CvBridgeError
 bridge = CvBridge()
 # use oop
 # Load Kalman filter to predict the trajectory
 kf = KalmanFilter()
+
+FILE = MapPath(__file__).absolute()
+sys.path.append(FILE.parents[0].as_posix())
 
 
 class FollowStatusMSG(Enum):
@@ -169,6 +175,21 @@ class MyNode(Node):
         self.nav_plan_subscription = self.create_subscription(
             Path, "/robot1/plan", self.nav_plan_path_callback, 10)
         self.nav_plan_subscription
+
+        # ! 匯出地圖
+        print(MapPath().absolute())
+        print(FILE)
+        print(FILE.parents[0])
+        self.Image_Path = FILE.parents[0] / 'map'
+        self.image_count = self.get_files_num(self.Image_Path)
+        print("image_count nums: ", self.image_count)
+
+    def get_files_num(self, dir_path):
+        count = 0
+        for path in MapPath(dir_path).iterdir():
+            if path.is_file():
+                count += 1
+        return count
 
     def nav_plan_path_callback(self, msg: Path):
         # 在這裡處理收到的路徑消息，獲取路徑上的點
@@ -504,14 +525,16 @@ class MyNode(Node):
             print("self.origin_height: ", self.origin_height)
             print("self.origin_width: ", self.origin_width)
             print("self.origin_channel: ", self.origin_channel)
-            print("origin_position_x: ", img.origin_position_x)
-            print("origin_position_y: ", img.origin_position_y)
-            self.fix_map_center_pixel_x = -8.8/self.map_resolution
-            self.fix_map_center_pixel_y = -5.24/self.map_resolution
+            origin_position_x = img.origin_position_x
+            origin_position_y = img.origin_position_y
+            print("origin_position_x: ", origin_position_x)
+            print("origin_position_y: ", origin_position_y)
+            self.fix_map_center_pixel_x = origin_position_x/self.map_resolution
+            self.fix_map_center_pixel_y = origin_position_y/self.map_resolution
             print("self.fix_map_center_pixel_x: ", self.fix_map_center_pixel_x)
             print("self.fix_map_center_pixel_y: ", self.fix_map_center_pixel_y)
-            self.map_center_pixel_x = (self.origin_width -
-                                       (self.origin_width + self.fix_map_center_pixel_x))
+            self.map_center_pixel_x = (
+                self.origin_width - (self.origin_width + self.fix_map_center_pixel_x))
             self.map_center_pixel_y = (
                 (self.origin_height + self.fix_map_center_pixel_y))
             print("self.map_center_pixel_x: ", self.map_center_pixel_x)
@@ -552,7 +575,7 @@ class MyNode(Node):
                 -1.0*float(another_center[1]), self.map_center_pixel_y)
             another_center_point = (int(another_center_x*1.0),
                                     int(another_center_y*(1.0)))
-            # ! 修改箭頭方向
+            # ! 修改箭頭方向(機器人座標)
             cv2.arrowedLine(map, another_center_point, center_point,
                             (0, 0, 255), thickness=3, line_type=cv2.LINE_4)
             # ! 印出像素地圖的中心點
@@ -610,7 +633,9 @@ class MyNode(Node):
                                     another_center_point)  # 共會儲存20組座標
                                 for pt in self.coordinates:
                                     self.predicted = kf.predict(pt[0], pt[1])
-                                    # //self.predicted = kf.predict_avoid_obstacle(pt[0], pt[1])
+                                
+                                # self.predicted = kf.predict(another_center_point[0], another_center_point[1])
+                                
                                 print("target position: ",
                                       another_center_point)
 
@@ -621,7 +646,7 @@ class MyNode(Node):
                                 cv2.circle(map, self.predicted,
                                            3, (255, 255, 0), -1)
                                 predicted = self.predicted
-                                #!印出未來5筆預測的座標(圓形)
+                                #!印出未來10筆預測的座標(圓形)
                                 for i in range(self.future_predicted_maxlen):
                                     predicted = kf.predict_avoid_obstacle(
                                         predicted[0], predicted[1])
@@ -676,8 +701,8 @@ class MyNode(Node):
                 kf.init()
                 self.print_debug_msg()
             elif key == ord('s'):
-                # self.follow_controller_update("walker")
-                self.follow_controller_update("nurse")
+                self.follow_controller_update("walker")
+                # self.follow_controller_update("nurse")
                 self.follow_controller_start_follow()
             elif key == ord('d'):
                 self.follow_controller_update("walker")
@@ -690,6 +715,12 @@ class MyNode(Node):
                     self.predicted_final_pos[0], self.predicted_final_pos[1], self.predicted_final_degree)
             elif key == ord('c'):
                 self.cancel_robot1_goal()
+            elif key == ord('a'):
+                # 存地圖
+                self.image_count = self.image_count + 1
+                Img_File_Name = str(self.image_count) + '.png'
+                cv2.imwrite(str(self.Image_Path / Img_File_Name), map)
+                print("SAVE PIC: ", str(self.Image_Path / Img_File_Name))
             # loop_time = int((time.time()-self.start_loop_time) * 1000)
             # print("loop time(ms): ", loop_time)
             self.state_machine_proc()
@@ -708,9 +739,9 @@ class MyNode(Node):
             # print("state_machine_status: ", self.state_machine_status)
 
         if self.state_machine_status == StateMachineStatus.Idle:
-            pass
-            # if self.follow_status_msg == FollowStatusMSG.FOLLOWING:
-            #     self.state_machine_status = StateMachineStatus.Target_Following
+            # pass
+            if self.follow_status_msg == FollowStatusMSG.FOLLOWING:
+                self.state_machine_status = StateMachineStatus.Target_Following
 
         elif self.state_machine_status == StateMachineStatus.Target_Following:
             # 目標正在跟隨中，但突然接收到Missing

@@ -167,7 +167,7 @@ class TrackActionServer(Node):
         self.pid_feedback = [0.0, 0.0]
         self.pid = PID(self.pid_kp, self.pid_ki, self.pid_kd)
         self.pid.last_time = self.get_clock().now()
-        self.pid.SetPoint = [float(640/2), 1.19]  # 目標量[畫面中心點（X）, 物體距離(m)]
+        self.pid.SetPoint = [float(640/2), 0.9]  # 目標量[畫面中心點（X）, 物體距離(m)]
         self.pid.setSampleTime(0.01)
         __twist_topic_name = "/" + self.args.robot_name + "/cmd_vel"
         print("__twist_topic_name: ", __twist_topic_name)

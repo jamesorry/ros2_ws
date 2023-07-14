@@ -1,0 +1,16 @@
+          <waypoint>
+            <time>5</time>
+            <pose>2.0 -8.0 0.0 0.0 0.0 3.142</pose>
+          </waypoint>
+          <waypoint>
+            <time>15</time>
+            <pose>-6.0 -8.0 0.0 0.0 0.0 3.142</pose>
+          </waypoint>
+          <waypoint>
+            <time>20</time>
+            <pose>-8.0 -8.0 0.0 0.0 0.0 2.355</pose>
+          </waypoint>
+          <waypoint>
+            <time>200</time>
+            <pose>-8.0 -8.0 0.0 0.0 0.0 1.57</pose>
+          </waypoint>

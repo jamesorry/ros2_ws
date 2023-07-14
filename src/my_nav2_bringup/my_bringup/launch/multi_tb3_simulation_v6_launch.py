@@ -54,8 +54,10 @@ def gen_robot_list(number_of_robots):
     #                   'y_pose': -0.5, 'z_pose': 0.01})
     # 修改啟動時座標的設定方式
     if number_of_robots is 1:
-        robots.append({'name': "robot1", 'x_pose': 0.0,
-                      'y_pose': -1.0, 'z_pose': 0.01})
+        robots.append({'name': "robot1", 'x_pose': 1.5,
+                      'y_pose': -3.0, 'z_pose': 0.01})
+        # robots.append({'name': "robot1", 'x_pose': 2.0,
+        #               'y_pose': -5.0, 'z_pose': 0.01})
     elif number_of_robots is 2:  # this  is for position my_own_world_only.model
         # robots.append({'name': "robot1", 'x_pose': -2.0,
         #               'y_pose': 1.0, 'z_pose': 0.01})
@@ -107,7 +109,8 @@ def generate_launch_description():
     declare_world_cmd = DeclareLaunchArgument(
         'world',
         default_value=os.path.join(
-            bringup_dir, 'worlds', 'my_own_world_v2_only_for_map_v2.model'),
+            bringup_dir, 'worlds', 'my_own_world_v2_only.model'),
+            # bringup_dir, 'worlds', 'my_own_world_v2_only_for_map_v2.model'),
         description='Full path to world file to load')
     # 2022/09/30 modify===========================================
 
@@ -132,7 +135,8 @@ def generate_launch_description():
     declare_map_yaml_cmd = DeclareLaunchArgument(
         'map',
         default_value=os.path.join(
-            bringup_dir, 'maps', 'my_own_map_v2.yaml'),
+            bringup_dir, 'maps', 'my_own_map_v3.yaml'),
+            # bringup_dir, 'maps', 'my_own_map_v2.yaml'),
         description='Full path to map file to load')
     # 2022/09/30 modify===========================================
 
